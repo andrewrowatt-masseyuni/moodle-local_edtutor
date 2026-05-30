@@ -33,12 +33,30 @@ class manager {
     public static function get_allocated_students(int $tutorid): array {
         global $DB;
         $userfields = \core_user\fields::for_name()->get_sql('u')->selects;
-        $sql = "SELECT u.id $userfields
+        $sql = "SELECT u.id, u.username $userfields
                   FROM {local_edtutor_allocation} a
                   JOIN {user} u ON u.id = a.studentid
                  WHERE a.tutorid = :tutorid AND u.deleted = 0
               ORDER BY u.lastname, u.firstname";
         return $DB->get_records_sql($sql, ['tutorid' => $tutorid]);
+    }
+
+    /**
+     * Students allocated to a tutor who are also enrolled in a given course.
+     *
+     * @param int $tutorid
+     * @param int $courseid
+     * @return array Array of user records keyed by user id.
+     */
+    public static function get_allocated_students_in_course(int $tutorid, int $courseid): array {
+        $context = \context_course::instance($courseid);
+        $students = self::get_allocated_students($tutorid);
+        foreach ($students as $id => $student) {
+            if (!is_enrolled($context, $id)) {
+                unset($students[$id]);
+            }
+        }
+        return $students;
     }
 
     /**
@@ -136,14 +154,16 @@ class manager {
             $userids[$a->studentid] = $a->studentid;
         }
         $namefields = implode(',', \core_user\fields::for_name()->get_required_fields());
-        $users = $DB->get_records_list('user', 'id', array_values($userids), '', 'id,' . $namefields);
+        $users = $DB->get_records_list('user', 'id', array_values($userids), '', 'id,username,' . $namefields);
         $rows = [];
         foreach ($allocations as $a) {
             $rows[] = (object)[
                 'id' => $a->id,
                 'tutorid' => $a->tutorid,
                 'studentid' => $a->studentid,
-                'tutorname' => isset($users[$a->tutorid]) ? fullname($users[$a->tutorid]) : '-',
+                'tutorname' => isset($users[$a->tutorid])
+                    ? fullname($users[$a->tutorid]) . ' (' . $users[$a->tutorid]->username . ')'
+                    : '-',
                 'studentname' => isset($users[$a->studentid]) ? fullname($users[$a->studentid]) : '-',
             ];
         }
@@ -325,12 +345,12 @@ class manager {
     }
 
     /**
-     * A student's full name with their username in parentheses, for non-table displays.
+     * A user's full name with their username in parentheses.
      *
      * @param int $userid
      * @return string
      */
-    public static function student_name_with_username(int $userid): string {
+    public static function name_with_username(int $userid): string {
         $user = \core_user::get_user($userid);
         if (!$user) {
             return '-';

@@ -37,15 +37,13 @@ class notification {
             return;
         }
 
-        $student = \core_user::get_user($submission->get('studentid'));
-        $tutor = \core_user::get_user($submission->get('tutorid'));
         $course = get_course($submission->get('courseid'));
         $cm = get_coursemodule_from_id('assign', $submission->get('cmid'), 0, false, IGNORE_MISSING);
         $url = new \moodle_url('/local/edtutor/view.php', ['id' => $submission->get('id')]);
 
         $a = (object)[
-            'student' => $student ? fullname($student) . ' (' . $student->username . ')' : '',
-            'tutor' => $tutor ? fullname($tutor) : '',
+            'student' => manager::name_with_username($submission->get('studentid')),
+            'tutor' => manager::name_with_username($submission->get('tutorid')),
             'assignment' => $cm ? format_string($cm->name) : '',
             'course' => format_string($course->fullname),
             'reason' => (string)$submission->get('failurereason'),

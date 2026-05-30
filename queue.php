@@ -59,14 +59,13 @@ if (empty($submissions)) {
     );
     foreach ($submissions as $submission) {
         $info = manager::describe_submission($submission);
-        $tutor = core_user::get_user($submission->get('tutorid'));
         $table->data[] = array_merge(
             [$info->studentname],
             manager::get_identity_values($submission->get('studentid')),
             [
                 $info->coursename,
                 $info->assignmentname,
-                $tutor ? fullname($tutor) : '-',
+                manager::name_with_username($submission->get('tutorid')),
                 $info->timecreated,
                 html_writer::link($info->viewurl, get_string('viewsubmission', 'local_edtutor')),
             ]

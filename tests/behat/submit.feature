@@ -31,7 +31,7 @@ Feature: Submit an assignment on behalf of a student
       | capability                     | permission | role    | contextlevel | reference |
       | mod/assign:editothersubmission | Allow      | teacher | Course       | C1        |
     And I am on the "local_edtutor > submit" page logged in as "tutor1"
-    When I select "Student One" from the "Student" singleselect
+    When I select "Student One (student1)" from the "Student" singleselect
     And I select "Course 1" from the "Course" singleselect
     And I select "Assignment 1" from the "Assignment" singleselect
     And I set the field "Online text" to "This is the student's work"
@@ -41,7 +41,7 @@ Feature: Submit an assignment on behalf of a student
 
   Scenario: A submission is escalated when the tutor lacks the on-behalf capability
     Given I am on the "local_edtutor > submit" page logged in as "tutor1"
-    When I select "Student One" from the "Student" singleselect
+    When I select "Student One (student1)" from the "Student" singleselect
     And I select "Course 1" from the "Course" singleselect
     And I select "Assignment 1" from the "Assignment" singleselect
     And I set the field "Online text" to "This is the student's work"

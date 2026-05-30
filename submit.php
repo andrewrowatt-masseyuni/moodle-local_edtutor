@@ -51,13 +51,24 @@ $PAGE->navbar->add(get_string('submitonbehalf', 'local_edtutor'));
 
 $students = manager::get_allocated_students($tutorid);
 
+// Pre-fill from a course (e.g. the user-menu "Submit on behalf" link). When the
+// tutor has a single allocated student in that course, pre-select them too.
+if ($courseid && !$studentid) {
+    $coursestudents = manager::get_allocated_students_in_course($tutorid, $courseid);
+    if (count($coursestudents) === 1) {
+        $studentid = (int)array_key_first($coursestudents);
+    }
+}
+
 // Validate any selections that were already made.
 if ($studentid && !isset($students[$studentid])) {
     throw new moodle_exception('error:notallocated', 'local_edtutor');
 }
 $courses = $studentid ? manager::get_student_courses($studentid) : [];
-if ($courseid && !isset($courses[$courseid])) {
-    throw new moodle_exception('invalidcourseid', 'error');
+// Drop a pre-filled or carried-over course the selected student is not enrolled
+// in (e.g. after switching students); the tutor can pick another.
+if ($studentid && $courseid && !isset($courses[$courseid])) {
+    $courseid = 0;
 }
 $assigns = $courseid ? manager::get_course_assignments($courseid) : [];
 if ($cmid && !isset($assigns[$cmid])) {
@@ -89,7 +100,7 @@ if ($studentid && $courseid && $cmid) {
         $submission = submission_service::create_and_submit($studentid, $cm, $data, $tutorid);
         $viewurl = new moodle_url('/local/edtutor/view.php', ['id' => $submission->get('id')]);
         if ($submission->get('status') == submission::STATUS_SUBMITTED_AUTO) {
-            $studentname = manager::student_name_with_username($submission->get('studentid'));
+            $studentname = manager::name_with_username($submission->get('studentid'));
             redirect(
                 $viewurl,
                 get_string('outcome_submitted', 'local_edtutor', $studentname),
@@ -118,9 +129,11 @@ if (empty($students)) {
 // Step 1: choose the student.
 $studentoptions = [];
 foreach ($students as $sid => $user) {
-    $studentoptions[$sid] = fullname($user);
+    $studentoptions[$sid] = fullname($user) . ' (' . $user->username . ')';
 }
-$select = new single_select($baseurl, 'studentid', $studentoptions, $studentid);
+// Carry a pre-filled course through so it survives changing the student.
+$studenturl = $courseid ? new moodle_url($baseurl, ['courseid' => $courseid]) : $baseurl;
+$select = new single_select($studenturl, 'studentid', $studentoptions, $studentid);
 $select->label = get_string('selectstudent', 'local_edtutor') . ': ';
 echo $OUTPUT->render($select);
 

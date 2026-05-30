@@ -50,7 +50,6 @@ $PAGE->set_title(get_string('submissiondetails', 'local_edtutor'));
 $PAGE->set_heading(get_string('submissiondetails', 'local_edtutor'));
 
 $info = manager::describe_submission($submission);
-$tutor = core_user::get_user($submission->get('tutorid'));
 $cm = get_coursemodule_from_id('assign', $submission->get('cmid'), 0, false, IGNORE_MISSING);
 
 echo $OUTPUT->header();
@@ -58,11 +57,12 @@ echo $OUTPUT->heading(get_string('submissiondetails', 'local_edtutor'));
 
 $details = new html_table();
 $details->data[] = [get_string('student', 'local_edtutor'),
-    s(manager::student_name_with_username($submission->get('studentid')))];
+    s(manager::name_with_username($submission->get('studentid')))];
 $details->data[] = [get_string('selectcourse', 'local_edtutor'), $info->coursename];
 $details->data[] = [get_string('target', 'local_edtutor'), $info->assignmentname];
 $details->data[] = [get_string('status', 'local_edtutor'), $info->statusname];
-$details->data[] = [get_string('createdby', 'local_edtutor'), $tutor ? fullname($tutor) : '-'];
+$details->data[] = [get_string('createdby', 'local_edtutor'),
+    s(manager::name_with_username($submission->get('tutorid')))];
 $details->data[] = [get_string('createdon', 'local_edtutor'), $info->timecreated];
 if ($submission->get('failurereason')) {
     $details->data[] = [get_string('reason', 'local_edtutor'), $submission->get('failurereason')];

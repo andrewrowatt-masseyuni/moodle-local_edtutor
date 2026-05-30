@@ -27,7 +27,7 @@ Feature: Manage education tutor allocations
     And I set the field "Student" to "Student One"
     And I press "Add allocation"
     Then I should see "Allocation added"
-    And I should see "Tutor Two"
+    And I should see "Tutor Two (tutor2)"
     And I should see "Student One"
 
   Scenario: A user who cannot assign roles is limited to existing tutors
@@ -39,7 +39,7 @@ Feature: Manage education tutor allocations
     And I set the field "Student" to "Student One"
     And I press "Add allocation"
     Then I should see "Allocation added"
-    And I should see "Tutor One"
+    And I should see "Tutor One (tutor1)"
 
   Scenario: A manager removes an existing allocation
     Given the following "local_edtutor > allocations" exist:

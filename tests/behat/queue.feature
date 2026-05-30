@@ -35,6 +35,7 @@ Feature: Complete escalated submissions
     And I should see "Assignment 1"
     When I follow "View submission"
     Then I should see "Student One (student1)"
+    And I should see "Tutor One (tutor1)"
     And I should see "Work needing manual submission"
     And I should see "Pending manual submission"
     When I follow "Mark as completed"

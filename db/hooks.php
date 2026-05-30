@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for Education tutor submissions.
+ * Hook callbacks for Education tutor submissions.
  *
  * @package    local_edtutor
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
@@ -24,9 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component    = 'local_edtutor';
-$plugin->release      = '0.1.0';
-$plugin->version      = 2026053100;
-$plugin->requires     = 2024100700;
-$plugin->supported    = [405, 405];
-$plugin->maturity     = MATURITY_ALPHA;
+$callbacks = [
+    [
+        'hook' => \core_user\hook\extend_user_menu::class,
+        'callback' => \local_edtutor\hook_listener\user_menu::class . '::extend_user_menu',
+        'priority' => 0,
+    ],
+];
