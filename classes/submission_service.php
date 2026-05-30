@@ -284,6 +284,13 @@ class submission_service {
         if (!has_capability('mod/assign:editothersubmission', $modcontext)) {
             return get_string('reason_nocapability', 'local_edtutor');
         }
+        // Honour the assignment's access restrictions for the student: if availability
+        // conditions (e.g. a group restriction) would stop the student reaching the
+        // activity, the work must be reviewed and submitted manually rather than forced
+        // through automatically.
+        if (!\core_availability\info_module::is_user_visible($assign->get_course_module(), $studentid, false)) {
+            return get_string('reason_restricted', 'local_edtutor');
+        }
         if (!$assign->submissions_open($studentid)) {
             return get_string('reason_notopen', 'local_edtutor');
         }

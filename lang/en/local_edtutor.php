@@ -101,6 +101,7 @@ $string['reason_nofileplugin'] = 'File submissions are not enabled for this assi
 $string['reason_notassign'] = 'The selected activity is not a standard assignment.';
 $string['reason_notextplugin'] = 'Online text is not enabled for this assignment, so it must be completed manually.';
 $string['reason_notopen'] = 'The assignment is not open for submission (it may be closed or past its cut-off date).';
+$string['reason_restricted'] = 'Access restrictions on this assignment prevent the student from reaching it, so it must be completed manually.';
 $string['reason_savefailed'] = 'Saving the submission failed: {$a}';
 $string['reason_teamsubmission'] = 'This assignment uses group submissions, which must be completed manually.';
 $string['selectassignment'] = 'Assignment';
