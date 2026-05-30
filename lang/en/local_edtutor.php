@@ -133,4 +133,5 @@ $string['submittedfiles'] = 'Submitted files';
 $string['target'] = 'Target assignment';
 $string['tutor'] = 'Tutor';
 $string['tutorarea'] = 'Submit on behalf of a student';
+$string['unsupportedsubmissiontype'] = 'This assignment requires a "{$a}" submission which is currently not supported. You can still proceed, but the submission will need to be handled by a support staff member.';
 $string['viewsubmission'] = 'View submission';

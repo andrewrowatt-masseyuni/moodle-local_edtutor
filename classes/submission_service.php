@@ -57,6 +57,88 @@ class submission_service {
     }
 
     /**
+     * Submission plugin types ignored by the on-behalf form: they neither collect
+     * work the tutor enters here nor block automatic submission (e.g. submission
+     * comments), so they should not trigger the "not supported" message.
+     */
+    protected const IGNORED_TYPES = ['comments'];
+
+    /**
+     * Describe the submission types enabled on an assignment so the on-behalf
+     * form can show only the relevant inputs (mirroring the assignment's own
+     * settings) and flag any enabled-but-unsupported types for escalation.
+     *
+     * @param \cm_info $cm The target assignment course module.
+     * @return \stdClass {bool fileenabled, array fileoptions, bool textenabled, string[] unsupported}
+     */
+    public static function enabled_submission_types(\cm_info $cm): \stdClass {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/assign/locallib.php');
+
+        $types = (object)[
+            'fileenabled' => false,
+            'fileoptions' => self::file_options($CFG->maxbytes),
+            'textenabled' => false,
+            'unsupported' => [],
+        ];
+
+        if ($cm->modname !== 'assign') {
+            return $types;
+        }
+
+        $modcontext = \context_module::instance($cm->id);
+        $assign = new \assign($modcontext, $cm, get_course($cm->course));
+
+        foreach ($assign->get_submission_plugins() as $plugin) {
+            if (!$plugin->is_enabled() || !$plugin->is_visible()) {
+                continue;
+            }
+            $type = $plugin->get_type();
+            if (in_array($type, self::IGNORED_TYPES, true)) {
+                continue;
+            }
+            switch ($type) {
+                case 'file':
+                    $types->fileenabled = true;
+                    $types->fileoptions = self::assignment_file_options($plugin);
+                    break;
+                case 'onlinetext':
+                    $types->textenabled = true;
+                    break;
+                default:
+                    $types->unsupported[] = $plugin->get_name();
+            }
+        }
+
+        return $types;
+    }
+
+    /**
+     * Mirror an assignment file submission plugin's settings as filemanager options
+     * (maximum number of files, maximum submission size and accepted file types).
+     *
+     * @param \assign_submission_plugin $plugin The enabled file submission plugin.
+     * @return array
+     */
+    protected static function assignment_file_options(\assign_submission_plugin $plugin): array {
+        $maxbytes = (int)$plugin->get_config('maxsubmissionsizebytes');
+        if ($maxbytes === 0) {
+            // A zero means "use the site/module default" in mod_assign.
+            $maxbytes = (int)get_config('assignsubmission_file', 'maxbytes');
+        }
+        $maxfiles = (int)$plugin->get_config('maxfilesubmissions');
+        $util = new \core_form\filetypes_util();
+        $accepted = $util->normalize_file_types((string)$plugin->get_config('filetypeslist'));
+
+        return [
+            'subdirs' => 1,
+            'maxbytes' => $maxbytes,
+            'maxfiles' => $maxfiles > 0 ? $maxfiles : 1,
+            'accepted_types' => $accepted ?: '*',
+        ];
+    }
+
+    /**
      * Create a submission record from a tutor's form data and attempt to submit it automatically.
      *
      * @param int $studentid The student the work is for.

@@ -138,6 +138,55 @@ final class submission_service_test extends \advanced_testcase {
     }
 
     /**
+     * Only enabled submission types are reported, and the file plugin's settings
+     * (max files, max size and accepted types) are mirrored.
+     */
+    public function test_enabled_submission_types_mirrors_file_settings(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $assign = $this->getDataGenerator()->create_module('assign', [
+            'course' => $course->id,
+            'assignsubmission_onlinetext_enabled' => 1,
+            'assignsubmission_file_enabled' => 1,
+            'assignsubmission_file_maxfiles' => 4,
+            'assignsubmission_file_maxsizebytes' => 1048576,
+            'assignsubmission_file_filetypes' => '.pdf,.docx',
+        ]);
+        $cm = get_fast_modinfo($course)->get_cm($assign->cmid);
+
+        $types = submission_service::enabled_submission_types($cm);
+
+        $this->assertTrue($types->fileenabled);
+        $this->assertTrue($types->textenabled);
+        $this->assertSame([], $types->unsupported);
+        $this->assertEquals(4, $types->fileoptions['maxfiles']);
+        $this->assertEquals(1048576, $types->fileoptions['maxbytes']);
+        $this->assertEqualsCanonicalizing(['.pdf', '.docx'], $types->fileoptions['accepted_types']);
+    }
+
+    /**
+     * A disabled submission type is not offered on the on-behalf form.
+     */
+    public function test_enabled_submission_types_omits_disabled_file(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $assign = $this->getDataGenerator()->create_module('assign', [
+            'course' => $course->id,
+            'assignsubmission_onlinetext_enabled' => 1,
+            'assignsubmission_file_enabled' => 0,
+        ]);
+        $cm = get_fast_modinfo($course)->get_cm($assign->cmid);
+
+        $types = submission_service::enabled_submission_types($cm);
+
+        $this->assertFalse($types->fileenabled);
+        $this->assertTrue($types->textenabled);
+        $this->assertSame([], $types->unsupported);
+    }
+
+    /**
      * Create a tutor with the on-behalf capability in the course.
      *
      * @param \stdClass $course

@@ -30,8 +30,8 @@ class submission_form extends \moodleform {
      * Define the form.
      */
     public function definition() {
-        global $CFG;
         $mform = $this->_form;
+        $types = $this->_customdata['types'];
 
         $mform->addElement('hidden', 'studentid', $this->_customdata['studentid']);
         $mform->setType('studentid', PARAM_INT);
@@ -39,23 +39,29 @@ class submission_form extends \moodleform {
         $mform->addElement('hidden', 'cmid', $this->_customdata['cmid']);
         $mform->setType('cmid', PARAM_INT);
 
-        $mform->addElement(
-            'filemanager',
-            'submissionfiles',
-            get_string('submissionfiles', 'local_edtutor'),
-            null,
-            submission_service::file_options($CFG->maxbytes)
-        );
-        $mform->addHelpButton('submissionfiles', 'submissionfiles', 'local_edtutor');
+        // Only offer the inputs for submission types enabled on the assignment,
+        // mirroring its file settings (max files, max size, accepted types).
+        if ($types->fileenabled) {
+            $mform->addElement(
+                'filemanager',
+                'submissionfiles',
+                get_string('submissionfiles', 'local_edtutor'),
+                null,
+                $types->fileoptions
+            );
+            $mform->addHelpButton('submissionfiles', 'submissionfiles', 'local_edtutor');
+        }
 
-        $mform->addElement(
-            'editor',
-            'onlinetext_editor',
-            get_string('onlinetext', 'local_edtutor'),
-            null,
-            submission_service::editor_options()
-        );
-        $mform->setType('onlinetext_editor', PARAM_RAW);
+        if ($types->textenabled) {
+            $mform->addElement(
+                'editor',
+                'onlinetext_editor',
+                get_string('onlinetext', 'local_edtutor'),
+                null,
+                submission_service::editor_options()
+            );
+            $mform->setType('onlinetext_editor', PARAM_RAW);
+        }
 
         $this->add_action_buttons(true, get_string('submitonbehalf', 'local_edtutor'));
     }
@@ -71,6 +77,13 @@ class submission_form extends \moodleform {
         global $USER;
         $errors = parent::validation($data, $files);
 
+        $types = $this->_customdata['types'];
+        // When only unsupported types are enabled there is nothing to collect here;
+        // the tutor proceeds and the submission is escalated for manual handling.
+        if (!$types->fileenabled && !$types->textenabled) {
+            return $errors;
+        }
+
         $draftid = $data['submissionfiles'] ?? 0;
         $areafiles = [];
         if ($draftid) {
@@ -81,7 +94,8 @@ class submission_form extends \moodleform {
         $text = trim(html_to_text($data['onlinetext_editor']['text'] ?? ''));
 
         if (empty($areafiles) && $text === '') {
-            $errors['submissionfiles'] = get_string('submissionempty', 'local_edtutor');
+            $errorfield = $types->fileenabled ? 'submissionfiles' : 'onlinetext_editor';
+            $errors[$errorfield] = get_string('submissionempty', 'local_edtutor');
         }
 
         return $errors;

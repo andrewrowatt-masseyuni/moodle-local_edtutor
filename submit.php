@@ -77,22 +77,29 @@ if ($cmid && !isset($assigns[$cmid])) {
 
 // Build and process the submission form before any output (so redirects work cleanly).
 $form = null;
+$types = null;
 if ($studentid && $courseid && $cmid) {
     $cm = $assigns[$cmid];
-    $filecontext = context_system::instance();
-    $draftitemid = file_get_submitted_draft_itemid('submissionfiles');
-    file_prepare_draft_area(
-        $draftitemid,
-        $filecontext->id,
-        submission::FILE_COMPONENT,
-        submission::FILE_AREA,
-        null,
-        submission_service::file_options($CFG->maxbytes)
-    );
+    $types = submission_service::enabled_submission_types($cm);
+
+    $formdata = ['studentid' => $studentid, 'cmid' => $cmid];
+    if ($types->fileenabled) {
+        $filecontext = context_system::instance();
+        $draftitemid = file_get_submitted_draft_itemid('submissionfiles');
+        file_prepare_draft_area(
+            $draftitemid,
+            $filecontext->id,
+            submission::FILE_COMPONENT,
+            submission::FILE_AREA,
+            null,
+            $types->fileoptions
+        );
+        $formdata['submissionfiles'] = $draftitemid;
+    }
 
     $actionurl = new moodle_url($baseurl, ['studentid' => $studentid, 'courseid' => $courseid, 'cmid' => $cmid]);
-    $form = new submission_form($actionurl, ['studentid' => $studentid, 'cmid' => $cmid]);
-    $form->set_data(['studentid' => $studentid, 'cmid' => $cmid, 'submissionfiles' => $draftitemid]);
+    $form = new submission_form($actionurl, ['studentid' => $studentid, 'cmid' => $cmid, 'types' => $types]);
+    $form->set_data($formdata);
 
     if ($form->is_cancelled()) {
         redirect(new moodle_url('/local/edtutor/index.php'));
@@ -146,7 +153,7 @@ if ($studentid) {
     }
     $courseoptions = [];
     foreach ($courses as $cid => $course) {
-        $courseoptions[$cid] = format_string($course->fullname);
+        $courseoptions[$cid] = format_string($course->fullname) . ' (' . format_string($course->shortname) . ')';
     }
     $select = new single_select(
         new moodle_url($baseurl, ['studentid' => $studentid]),
@@ -182,6 +189,18 @@ if ($studentid && $courseid) {
 // Step 4: the upload form.
 if ($form) {
     echo $OUTPUT->heading($assigns[$cmid]->get_formatted_name(), 4);
+    // Flag any enabled submission type the tutor cannot fill in here.
+    if (!empty($types->unsupported)) {
+        echo html_writer::start_div('local_edtutor_unsupported');
+        foreach ($types->unsupported as $typename) {
+            echo $OUTPUT->notification(
+                get_string('unsupportedsubmissiontype', 'local_edtutor', $typename),
+                'info',
+                false
+            );
+        }
+        echo html_writer::end_div();
+    }
     $form->display();
 }
 

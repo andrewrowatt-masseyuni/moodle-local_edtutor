@@ -1,0 +1,7 @@
+.local_edtutor_unsupported {
+    .alert.alert-info {
+        border-left: 2px solid;
+
+        font-size: 0.9em;
+    }
+}
