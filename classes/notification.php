@@ -44,7 +44,7 @@ class notification {
         $url = new \moodle_url('/local/edtutor/view.php', ['id' => $submission->get('id')]);
 
         $a = (object)[
-            'student' => $student ? fullname($student) : '',
+            'student' => $student ? fullname($student) . ' (' . $student->username . ')' : '',
             'tutor' => $tutor ? fullname($tutor) : '',
             'assignment' => $cm ? format_string($cm->name) : '',
             'course' => format_string($course->fullname),

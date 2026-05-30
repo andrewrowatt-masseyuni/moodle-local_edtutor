@@ -6,10 +6,12 @@ Feature: Complete escalated submissions
 
   Background:
     Given the following "users" exist:
-      | username | firstname | lastname |
-      | manager1 | Manager   | One      |
-      | tutor1   | Tutor     | One      |
-      | student1 | Student   | One      |
+      | username | firstname | lastname | idnumber |
+      | manager1 | Manager   | One      |          |
+      | tutor1   | Tutor     | One      |          |
+      | student1 | Student   | One      | STU001   |
+    And the following config values are set as admin:
+      | showuseridentity | idnumber |
     And the following "courses" exist:
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
@@ -29,9 +31,11 @@ Feature: Complete escalated submissions
   Scenario: Support staff view an escalated submission and mark it complete
     Given I am on the "local_edtutor > queue" page logged in as "manager1"
     Then I should see "Student One"
+    And I should see "STU001"
     And I should see "Assignment 1"
     When I follow "View submission"
-    Then I should see "Work needing manual submission"
+    Then I should see "Student One (student1)"
+    And I should see "Work needing manual submission"
     And I should see "Pending manual submission"
     When I follow "Mark as completed"
     And I press "Mark as completed"

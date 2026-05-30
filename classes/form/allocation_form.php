@@ -17,6 +17,7 @@
 namespace local_edtutor\form;
 
 use local_edtutor\allocation;
+use local_edtutor\manager;
 
 /**
  * Form for manually creating a tutor to student allocation.
@@ -32,13 +33,24 @@ class allocation_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement(
-            'autocomplete',
-            'tutorid',
-            get_string('tutor', 'local_edtutor'),
-            [],
-            self::user_selector_options()
-        );
+        // Site admins may pick any user (the role is granted on save). Everyone else is
+        // limited to users who already hold the education tutor role.
+        if (manager::can_provision_tutor_role()) {
+            $mform->addElement(
+                'autocomplete',
+                'tutorid',
+                get_string('tutor', 'local_edtutor'),
+                [],
+                self::user_selector_options()
+            );
+        } else {
+            $mform->addElement(
+                'autocomplete',
+                'tutorid',
+                get_string('tutor', 'local_edtutor'),
+                manager::get_tutor_role_user_options()
+            );
+        }
         $mform->addRule('tutorid', get_string('required'), 'required', null, 'client');
 
         $mform->addElement(
@@ -69,6 +81,8 @@ class allocation_form extends \moodleform {
 
         if ($tutorid && !$DB->record_exists('user', ['id' => $tutorid, 'deleted' => 0])) {
             $errors['tutorid'] = get_string('error:tutornotfound', 'local_edtutor');
+        } else if ($tutorid && !manager::can_provision_tutor_role() && !manager::user_has_tutor_role($tutorid)) {
+            $errors['tutorid'] = get_string('error:tutornotrole', 'local_edtutor');
         }
         if ($studentid && !$DB->record_exists('user', ['id' => $studentid, 'deleted' => 0])) {
             $errors['studentid'] = get_string('error:studentnotfound', 'local_edtutor');

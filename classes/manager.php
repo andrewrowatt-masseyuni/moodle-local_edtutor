@@ -188,4 +188,153 @@ class manager {
             'viewurl' => new \moodle_url('/local/edtutor/view.php', ['id' => $submission->get('id')]),
         ];
     }
+
+    /**
+     * Role id for the configured education tutor role shortname, or null if unset/not found.
+     *
+     * @return int|null
+     */
+    public static function get_tutor_roleid(): ?int {
+        global $DB;
+        $shortname = trim((string)get_config('local_edtutor', 'roleshortname'));
+        if ($shortname === '') {
+            return null;
+        }
+        $roleid = $DB->get_field('role', 'id', ['shortname' => $shortname]);
+        return $roleid ? (int)$roleid : null;
+    }
+
+    /**
+     * Whether the current user may provision the education tutor role,
+     * i.e. they can assign roles in the system context.
+     *
+     * @return bool
+     */
+    public static function can_provision_tutor_role(): bool {
+        return has_capability('moodle/role:assign', \context_system::instance());
+    }
+
+    /**
+     * Users who hold the education tutor role at system context.
+     *
+     * @return array Array of user records keyed by user id.
+     */
+    public static function get_tutor_role_users(): array {
+        $roleid = self::get_tutor_roleid();
+        if (!$roleid) {
+            return [];
+        }
+        return get_role_users($roleid, \context_system::instance());
+    }
+
+    /**
+     * Tutor role holders as an id => fullname options array for a selector.
+     *
+     * @return array
+     */
+    public static function get_tutor_role_user_options(): array {
+        $options = [];
+        foreach (self::get_tutor_role_users() as $user) {
+            $options[$user->id] = fullname($user);
+        }
+        return $options;
+    }
+
+    /**
+     * Whether a user holds the education tutor role at system context.
+     *
+     * @param int $userid
+     * @return bool
+     */
+    public static function user_has_tutor_role(int $userid): bool {
+        $roleid = self::get_tutor_roleid();
+        if (!$roleid) {
+            return false;
+        }
+        return user_has_role_assignment($userid, $roleid, \context_system::instance()->id);
+    }
+
+    /**
+     * Assign the education tutor role to a user at system context.
+     *
+     * @param int $userid
+     * @return bool True if the role exists and was assigned (or already held), false if the role was not found.
+     */
+    public static function assign_tutor_role(int $userid): bool {
+        $roleid = self::get_tutor_roleid();
+        if (!$roleid) {
+            return false;
+        }
+        role_assign($roleid, $userid, \context_system::instance()->id);
+        return true;
+    }
+
+    /**
+     * Identity fields (from showuseridentity) the current user may see in the system context.
+     *
+     * @return string[]
+     */
+    public static function get_identity_fields(): array {
+        return \core_user\fields::get_identity_fields(\context_system::instance());
+    }
+
+    /**
+     * Table column headers for the identity fields.
+     *
+     * @return string[]
+     */
+    public static function get_identity_headers(): array {
+        $headers = [];
+        foreach (self::get_identity_fields() as $field) {
+            $headers[] = \core_user\fields::get_display_name($field);
+        }
+        return $headers;
+    }
+
+    /**
+     * Identity field values for a user, escaped and in the same order as the headers.
+     *
+     * @param int $userid
+     * @return string[]
+     */
+    public static function get_identity_values(int $userid): array {
+        global $CFG;
+        $fields = self::get_identity_fields();
+        if (empty($fields)) {
+            return [];
+        }
+        $user = \core_user::get_user($userid);
+        if (!$user) {
+            return array_fill(0, count($fields), '');
+        }
+        $customfields = null;
+        $values = [];
+        foreach ($fields as $field) {
+            if (preg_match('/^profile_field_(.*)$/', $field, $matches)) {
+                if ($customfields === null) {
+                    require_once($CFG->dirroot . '/user/profile/lib.php');
+                    $customfields = profile_user_record($userid, false);
+                }
+                $value = $customfields->{$matches[1]} ?? '';
+            } else {
+                $value = $user->$field ?? '';
+            }
+            $values[] = s((string)$value);
+        }
+        return $values;
+    }
+
+    /**
+     * A student's full name with their username in parentheses, for non-table displays.
+     *
+     * @param int $userid
+     * @return string
+     */
+    public static function student_name_with_username(int $userid): string {
+        $user = \core_user::get_user($userid);
+        if (!$user) {
+            return '-';
+        }
+        return fullname($user) . ' (' . $user->username . ')';
+    }
 }

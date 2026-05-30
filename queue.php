@@ -46,25 +46,31 @@ if (empty($submissions)) {
     echo $OUTPUT->notification(get_string('queueempty', 'local_edtutor'), 'info');
 } else {
     $table = new html_table();
-    $table->head = [
-        get_string('student', 'local_edtutor'),
-        get_string('selectcourse', 'local_edtutor'),
-        get_string('selectassignment', 'local_edtutor'),
-        get_string('tutor', 'local_edtutor'),
-        get_string('createdon', 'local_edtutor'),
-        '',
-    ];
+    $table->head = array_merge(
+        [get_string('student', 'local_edtutor')],
+        manager::get_identity_headers(),
+        [
+            get_string('selectcourse', 'local_edtutor'),
+            get_string('selectassignment', 'local_edtutor'),
+            get_string('tutor', 'local_edtutor'),
+            get_string('createdon', 'local_edtutor'),
+            '',
+        ]
+    );
     foreach ($submissions as $submission) {
         $info = manager::describe_submission($submission);
         $tutor = core_user::get_user($submission->get('tutorid'));
-        $table->data[] = [
-            $info->studentname,
-            $info->coursename,
-            $info->assignmentname,
-            $tutor ? fullname($tutor) : '-',
-            $info->timecreated,
-            html_writer::link($info->viewurl, get_string('viewsubmission', 'local_edtutor')),
-        ];
+        $table->data[] = array_merge(
+            [$info->studentname],
+            manager::get_identity_values($submission->get('studentid')),
+            [
+                $info->coursename,
+                $info->assignmentname,
+                $tutor ? fullname($tutor) : '-',
+                $info->timecreated,
+                html_writer::link($info->viewurl, get_string('viewsubmission', 'local_edtutor')),
+            ]
+        );
     }
     echo html_writer::table($table);
 }

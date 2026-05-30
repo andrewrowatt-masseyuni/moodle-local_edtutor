@@ -89,7 +89,7 @@ if ($studentid && $courseid && $cmid) {
         $submission = submission_service::create_and_submit($studentid, $cm, $data, $tutorid);
         $viewurl = new moodle_url('/local/edtutor/view.php', ['id' => $submission->get('id')]);
         if ($submission->get('status') == submission::STATUS_SUBMITTED_AUTO) {
-            $studentname = manager::describe_submission($submission)->studentname;
+            $studentname = manager::student_name_with_username($submission->get('studentid'));
             redirect(
                 $viewurl,
                 get_string('outcome_submitted', 'local_edtutor', $studentname),

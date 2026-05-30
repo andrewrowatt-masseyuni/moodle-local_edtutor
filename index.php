@@ -64,24 +64,30 @@ if (empty($submissions)) {
     echo $OUTPUT->notification(get_string('nosubmissions', 'local_edtutor'), 'info');
 } else {
     $table = new html_table();
-    $table->head = [
-        get_string('student', 'local_edtutor'),
-        get_string('selectcourse', 'local_edtutor'),
-        get_string('selectassignment', 'local_edtutor'),
-        get_string('status', 'local_edtutor'),
-        get_string('createdon', 'local_edtutor'),
-        '',
-    ];
+    $table->head = array_merge(
+        [get_string('student', 'local_edtutor')],
+        \local_edtutor\manager::get_identity_headers(),
+        [
+            get_string('selectcourse', 'local_edtutor'),
+            get_string('selectassignment', 'local_edtutor'),
+            get_string('status', 'local_edtutor'),
+            get_string('createdon', 'local_edtutor'),
+            '',
+        ]
+    );
     foreach ($submissions as $submission) {
         $info = \local_edtutor\manager::describe_submission($submission);
-        $table->data[] = [
-            $info->studentname,
-            $info->coursename,
-            $info->assignmentname,
-            $info->statusname,
-            $info->timecreated,
-            html_writer::link($info->viewurl, get_string('viewsubmission', 'local_edtutor')),
-        ];
+        $table->data[] = array_merge(
+            [$info->studentname],
+            \local_edtutor\manager::get_identity_values($submission->get('studentid')),
+            [
+                $info->coursename,
+                $info->assignmentname,
+                $info->statusname,
+                $info->timecreated,
+                html_writer::link($info->viewurl, get_string('viewsubmission', 'local_edtutor')),
+            ]
+        );
     }
     echo html_writer::table($table);
 }

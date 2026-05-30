@@ -57,7 +57,8 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('submissiondetails', 'local_edtutor'));
 
 $details = new html_table();
-$details->data[] = [get_string('student', 'local_edtutor'), $info->studentname];
+$details->data[] = [get_string('student', 'local_edtutor'),
+    s(manager::student_name_with_username($submission->get('studentid')))];
 $details->data[] = [get_string('selectcourse', 'local_edtutor'), $info->coursename];
 $details->data[] = [get_string('target', 'local_edtutor'), $info->assignmentname];
 $details->data[] = [get_string('status', 'local_edtutor'), $info->statusname];

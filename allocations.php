@@ -78,6 +78,15 @@ $form = new allocation_form($baseurl);
 if ($data = $form->get_data()) {
     $record = new allocation(0, (object)['tutorid' => (int)$data->tutorid, 'studentid' => (int)$data->studentid]);
     $record->create();
+    // Site admins can grant the education tutor role; for everyone else the tutor already holds it.
+    if (manager::can_provision_tutor_role() && !manager::assign_tutor_role((int)$data->tutorid)) {
+        redirect(
+            $baseurl,
+            get_string('allocationaddednorole', 'local_edtutor', get_config('local_edtutor', 'roleshortname')),
+            null,
+            \core\output\notification::NOTIFY_WARNING
+        );
+    }
     redirect(
         $baseurl,
         get_string('allocationadded', 'local_edtutor'),
@@ -88,6 +97,9 @@ if ($data = $form->get_data()) {
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('manageallocations', 'local_edtutor'));
+if (!manager::can_provision_tutor_role() && empty(manager::get_tutor_role_user_options())) {
+    echo $OUTPUT->notification(get_string('notutorsavailable', 'local_edtutor'), 'warning');
+}
 $form->display();
 
 echo $OUTPUT->heading(get_string('allocations', 'local_edtutor'), 3);
@@ -96,18 +108,24 @@ if (empty($rows)) {
     echo $OUTPUT->notification(get_string('noallocations', 'local_edtutor'), 'info');
 } else {
     $table = new html_table();
-    $table->head = [
-        get_string('tutor', 'local_edtutor'),
-        get_string('student', 'local_edtutor'),
-        '',
-    ];
+    $table->head = array_merge(
+        [
+            get_string('tutor', 'local_edtutor'),
+            get_string('student', 'local_edtutor'),
+        ],
+        manager::get_identity_headers(),
+        ['']
+    );
     foreach ($rows as $row) {
         $removeurl = new moodle_url($baseurl, ['remove' => $row->id, 'sesskey' => sesskey()]);
-        $table->data[] = [
-            $row->tutorname,
-            $row->studentname,
-            html_writer::link($removeurl, get_string('remove')),
-        ];
+        $table->data[] = array_merge(
+            [
+                $row->tutorname,
+                $row->studentname,
+            ],
+            manager::get_identity_values($row->studentid),
+            [html_writer::link($removeurl, get_string('remove'))]
+        );
     }
     echo html_writer::table($table);
 }

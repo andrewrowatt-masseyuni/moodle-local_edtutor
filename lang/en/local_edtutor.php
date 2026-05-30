@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['addallocation'] = 'Add allocation';
 $string['allocation'] = 'Allocation';
 $string['allocationadded'] = 'Allocation added';
+$string['allocationaddednorole'] = 'Allocation added, but the education tutor role "{$a}" was not found. Create the role and assign it to the tutor, or update the plugin setting.';
 $string['allocationexists'] = 'That student is already allocated to this tutor';
 $string['allocationremoved'] = 'Allocation removed';
 $string['allocations'] = 'Allocations';
@@ -50,6 +51,7 @@ $string['error:notallocated'] = 'You are not allocated to this student.';
 $string['error:studentnotfound'] = 'Please select a valid student.';
 $string['error:submissionnotfound'] = 'Submission not found.';
 $string['error:tutornotfound'] = 'Please select a valid tutor.';
+$string['error:tutornotrole'] = 'The selected user does not have the education tutor role.';
 $string['escalation_body'] = 'A submission made by tutor {$a->tutor} on behalf of student {$a->student} for "{$a->assignment}" in {$a->course} could not be submitted automatically.
 
 Reason: {$a->reason}
@@ -75,6 +77,7 @@ $string['nofiles'] = 'No files were uploaded.';
 $string['nostudentsallocated'] = 'You do not have any students allocated to you. Contact the course coordinator if this is unexpected.';
 $string['nosubmissions'] = 'You have not made any submissions yet.';
 $string['notext'] = 'No online text was entered.';
+$string['notutorsavailable'] = 'There are no education tutors to choose from yet. A site administrator can set one up by adding an allocation, or by assigning the education tutor role.';
 $string['onlinetext'] = 'Online text';
 $string['outcome_escalated'] = 'The submission could not be made automatically and has been sent to support staff to complete. Reason: {$a}';
 $string['outcome_submitted'] = 'The submission was made automatically on behalf of {$a}.';
@@ -106,6 +109,8 @@ $string['selectstudent'] = 'Student';
 $string['selectstudent_help'] = 'Choose one of the students allocated to you.';
 $string['selectstudentuser'] = 'Select student';
 $string['selecttutor'] = 'Select tutor';
+$string['settings:roleshortname'] = 'Education tutor role shortname';
+$string['settings:roleshortname_desc'] = 'Shortname of system role with local/edtutor:submit, mod/assign:editothersubmission, moodle/site:viewuseridentity set to Allow. Suggested full name: Education tutor (proxy submit)';
 $string['settings:supportcourseid'] = 'Tutor support course id';
 $string['settings:supportcourseid_desc'] = 'Optional course id of the education tutor support site. When set, links to the tutor area are added to that course.';
 $string['settings:supportstaff'] = 'Support staff';

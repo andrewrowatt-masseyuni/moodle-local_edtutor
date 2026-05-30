@@ -44,6 +44,14 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'local_edtutor/roleshortname',
+        get_string('settings:roleshortname', 'local_edtutor'),
+        get_string('settings:roleshortname_desc', 'local_edtutor'),
+        'edtutorsubmit',
+        PARAM_ALPHANUMEXT
+    ));
+
     // Admin menu links to the management pages (each page also enforces its own capability,
     // so managers and support staff can reach them directly by URL too).
     $ADMIN->add('localplugins', new admin_externalpage(
