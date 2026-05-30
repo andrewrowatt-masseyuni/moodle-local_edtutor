@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/edtutor/db" VERSION="20260529" COMMENT="XMLDB file for Moodle local/edtutor"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_edtutor_allocation" COMMENT="Maps an education tutor to the students they act for">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="tutorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id of the tutor"/>
+        <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id of the allocated student"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="tutorid-studentid" UNIQUE="true" FIELDS="tutorid, studentid"/>
+        <INDEX NAME="studentid" UNIQUE="false" FIELDS="studentid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_edtutor_submission" COMMENT="Every on-behalf submission attempt, with its status">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="studentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id the work is submitted for"/>
+        <FIELD NAME="tutorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id of the tutor who created the submission"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Target course id"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Target course module id"/>
+        <FIELD NAME="assignid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Target assign instance id"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Module context id of the target assignment"/>
+        <FIELD NAME="onlinetext" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Optional online text content"/>
+        <FIELD NAME="onlinetextformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="See submission::STATUS_* constants"/>
+        <FIELD NAME="failurereason" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Why automatic submission was not possible"/>
+        <FIELD NAME="completedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Support staff user id who completed a manual submission"/>
+        <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Notes added by support staff"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="tutorid" UNIQUE="false" FIELDS="tutorid"/>
+        <INDEX NAME="studentid" UNIQUE="false" FIELDS="studentid"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
