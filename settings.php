@@ -48,7 +48,7 @@ if ($hassiteconfig) {
         'local_edtutor/roleshortname',
         get_string('settings:roleshortname', 'local_edtutor'),
         get_string('settings:roleshortname_desc', 'local_edtutor'),
-        'edtutorsubmit',
+        'edtutor',
         PARAM_ALPHANUMEXT
     ));
 
