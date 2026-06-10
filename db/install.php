@@ -42,6 +42,7 @@ function xmldb_local_edtutor_install() {
 
     $systemcontext = context_system::instance();
 
+    // I am aware that creating roles on install might not be standard practice.
     // Education tutor: submits assignments on behalf of allocated students.
     if (!$DB->record_exists('role', ['shortname' => 'edtutor'])) {
         $tutorroleid = create_role(
