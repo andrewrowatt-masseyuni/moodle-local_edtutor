@@ -11,6 +11,7 @@ Feature: Manage education tutor allocations
       | tutor1   | Tutor     | One      |
       | tutor2   | Tutor     | Two      |
       | student1 | Student   | One      |
+      | student2 | Student   | Two      |
     And the following "role assigns" exist:
       | user     | role    | contextlevel | reference |
       | manager1 | manager | System       |           |
@@ -24,11 +25,24 @@ Feature: Manage education tutor allocations
       | moodle/role:assign | Allow      | manager | System       |           |
     And I am on the "local_edtutor > allocations" page logged in as "manager1"
     When I set the field "Tutor" to "Tutor Two"
-    And I set the field "Student" to "Student One"
+    And I set the field "Students" to "Student One"
     And I press "Add allocation"
     Then I should see "Allocation added"
     And I should see "Tutor Two (tutor2)"
     And I should see "Student One"
+
+  Scenario: A manager allocates several students to a tutor at once
+    Given the following "permission overrides" exist:
+      | capability         | permission | role    | contextlevel | reference |
+      | moodle/role:assign | Allow      | manager | System       |           |
+    And I am on the "local_edtutor > allocations" page logged in as "manager1"
+    When I set the field "Tutor" to "Tutor Two"
+    And I set the field "Students" to "Student One"
+    And I set the field "Students" to "Student Two"
+    And I press "Add allocation"
+    Then I should see "2 allocations added"
+    And I should see "Student One"
+    And I should see "Student Two"
 
   Scenario: A user who cannot assign roles is limited to existing tutors
     Given the following "permission overrides" exist:
@@ -36,7 +50,7 @@ Feature: Manage education tutor allocations
       | moodle/role:assign | Prevent    | manager | System       |           |
     And I am on the "local_edtutor > allocations" page logged in as "manager1"
     When I set the field "Tutor" to "Tutor One"
-    And I set the field "Student" to "Student One"
+    And I set the field "Students" to "Student One"
     And I press "Add allocation"
     Then I should see "Allocation added"
     And I should see "Tutor One (tutor1)"

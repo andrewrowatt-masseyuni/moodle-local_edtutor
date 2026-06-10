@@ -73,13 +73,22 @@ if ($remove) {
     redirect($baseurl);
 }
 
-// Add a new allocation.
+// Add one or more new allocations.
 $form = new allocation_form($baseurl);
 if ($data = $form->get_data()) {
-    $record = new allocation(0, (object)['tutorid' => (int)$data->tutorid, 'studentid' => (int)$data->studentid]);
-    $record->create();
+    $tutorid = (int)$data->tutorid;
+    $studentids = allocation_form::clean_studentids($data->studentids);
+    $added = 0;
+    foreach ($studentids as $studentid) {
+        if (allocation::allocation_exists($tutorid, $studentid)) {
+            continue;
+        }
+        $record = new allocation(0, (object)['tutorid' => $tutorid, 'studentid' => $studentid]);
+        $record->create();
+        $added++;
+    }
     // Site admins can grant the education tutor role; for everyone else the tutor already holds it.
-    if (manager::can_provision_tutor_role() && !manager::assign_tutor_role((int)$data->tutorid)) {
+    if ($added && manager::can_provision_tutor_role() && !manager::assign_tutor_role($tutorid)) {
         redirect(
             $baseurl,
             get_string('allocationaddednorole', 'local_edtutor', get_config('local_edtutor', 'roleshortname')),
@@ -87,9 +96,12 @@ if ($data = $form->get_data()) {
             \core\output\notification::NOTIFY_WARNING
         );
     }
+    $message = $added == 1
+        ? get_string('allocationadded', 'local_edtutor')
+        : get_string('allocationsadded', 'local_edtutor', $added);
     redirect(
         $baseurl,
-        get_string('allocationadded', 'local_edtutor'),
+        $message,
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );

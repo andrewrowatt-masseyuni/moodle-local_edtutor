@@ -55,18 +55,18 @@ class allocation_form extends \moodleform {
 
         $mform->addElement(
             'autocomplete',
-            'studentid',
-            get_string('student', 'local_edtutor'),
+            'studentids',
+            get_string('students', 'local_edtutor'),
             [],
-            self::user_selector_options()
+            self::user_selector_options(true)
         );
-        $mform->addRule('studentid', get_string('required'), 'required', null, 'client');
+        $mform->addRule('studentids', get_string('required'), 'required', null, 'client');
 
         $this->add_action_buttons(false, get_string('addallocation', 'local_edtutor'));
     }
 
     /**
-     * Validate the selected users and the uniqueness of the allocation.
+     * Validate the selected users and the uniqueness of the allocations.
      *
      * @param array $data
      * @param array $files
@@ -77,31 +77,59 @@ class allocation_form extends \moodleform {
         $errors = parent::validation($data, $files);
 
         $tutorid = (int)($data['tutorid'] ?? 0);
-        $studentid = (int)($data['studentid'] ?? 0);
+        $studentids = self::clean_studentids($data['studentids'] ?? []);
 
         if ($tutorid && !$DB->record_exists('user', ['id' => $tutorid, 'deleted' => 0])) {
             $errors['tutorid'] = get_string('error:tutornotfound', 'local_edtutor');
         } else if ($tutorid && !manager::can_provision_tutor_role() && !manager::user_has_tutor_role($tutorid)) {
             $errors['tutorid'] = get_string('error:tutornotrole', 'local_edtutor');
         }
-        if ($studentid && !$DB->record_exists('user', ['id' => $studentid, 'deleted' => 0])) {
-            $errors['studentid'] = get_string('error:studentnotfound', 'local_edtutor');
-        }
-        if ($tutorid && $studentid && allocation::allocation_exists($tutorid, $studentid)) {
-            $errors['studentid'] = get_string('allocationexists', 'local_edtutor');
+
+        if (empty($studentids)) {
+            $errors['studentids'] = get_string('required');
+        } else {
+            foreach ($studentids as $studentid) {
+                if (!$DB->record_exists('user', ['id' => $studentid, 'deleted' => 0])) {
+                    $errors['studentids'] = get_string('error:studentnotfound', 'local_edtutor');
+                    break;
+                }
+            }
+            // Require at least one student who is not already allocated to this tutor.
+            if (empty($errors['studentids']) && $tutorid) {
+                $newstudents = array_filter($studentids, function ($studentid) use ($tutorid) {
+                    return !allocation::allocation_exists($tutorid, $studentid);
+                });
+                if (empty($newstudents)) {
+                    $errors['studentids'] = get_string('allocationsexist', 'local_edtutor');
+                }
+            }
         }
 
         return $errors;
     }
 
     /**
+     * Normalise a submitted multi-select value into a list of unique, positive user ids.
+     *
+     * @param mixed $value The raw value submitted for the student selector.
+     * @return int[]
+     */
+    public static function clean_studentids($value): array {
+        $ids = array_map('intval', (array)$value);
+        return array_values(array_unique(array_filter($ids, function ($id) {
+            return $id > 0;
+        })));
+    }
+
+    /**
      * Shared options for the AJAX user autocomplete selectors.
      *
+     * @param bool $multiple Whether the selector should allow multiple users to be chosen.
      * @return array
      */
-    protected static function user_selector_options(): array {
+    protected static function user_selector_options(bool $multiple = false): array {
         return [
-            'multiple' => false,
+            'multiple' => $multiple,
             'ajax' => 'core_user/form_user_selector',
             'valuehtmlcallback' => function ($userid) {
                 global $OUTPUT;
