@@ -61,7 +61,7 @@ class behat_local_edtutor extends behat_base {
     /**
      * Checks that a user is assigned a role in the system context.
      *
-     * @Then /^the "(?P<username>(?:[^"]|\\")*)" user should be assigned the "(?P<roleshortname>(?:[^"]|\\")*)" role in the system context$/
+     * @Then /^the "(?P<username>[^"]*)" user should be assigned the "(?P<roleshortname>[^"]*)" role in the system context$/
      * @param string $username the username of the user to check.
      * @param string $roleshortname the shortname of the role.
      */
@@ -80,7 +80,7 @@ class behat_local_edtutor extends behat_base {
     /**
      * Checks that a user is not assigned a role in the system context.
      *
-     * @Then /^the "(?P<username>(?:[^"]|\\")*)" user should not be assigned the "(?P<roleshortname>(?:[^"]|\\")*)" role in the system context$/
+     * @Then /^the "(?P<username>[^"]*)" user should not be assigned the "(?P<roleshortname>[^"]*)" role in the system context$/
      * @param string $username the username of the user to check.
      * @param string $roleshortname the shortname of the role.
      */

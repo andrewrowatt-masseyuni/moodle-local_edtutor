@@ -76,6 +76,7 @@ $string['loginasstudent'] = 'Log in as the student';
 $string['loginasstudentcurrent'] = '{$a} ✓';
 $string['loginasstudentname'] = 'Login as {$a}';
 $string['manageallocations'] = 'Manage allocations';
+$string['manageallocationsmenu'] = 'Manage Education Tutor allocations';
 $string['markcomplete'] = 'Mark as completed';
 $string['markcompleteheading'] = 'Mark submission as completed';
 $string['messageprovider:escalation'] = 'Submission needs manual completion';

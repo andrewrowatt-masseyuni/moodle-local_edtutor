@@ -33,7 +33,35 @@ class user_menu {
      */
     public static function extend_user_menu(\core_user\hook\extend_user_menu $hook): void {
         self::add_submit_link($hook);
+        self::add_manageallocations_link($hook);
         self::add_loginas_items($hook);
+    }
+
+    /**
+     * Add a "Manage Education Tutor allocations" link to the user menu.
+     *
+     * Shown on every page for users who can manage the tutor to student
+     * allocations, such as holders of the education tutor manager role.
+     *
+     * @param \core_user\hook\extend_user_menu $hook The user menu hook.
+     */
+    private static function add_manageallocations_link(\core_user\hook\extend_user_menu $hook): void {
+        if (!has_capability('local/edtutor:manageallocations', \context_system::instance())) {
+            return;
+        }
+
+        $divider = new \stdClass();
+        $divider->itemtype = 'divider';
+        $divider->titleidentifier = 'divider,local_edtutor';
+        $hook->add_navitem($divider);
+
+        $item = new \stdClass();
+        $item->itemtype = 'link';
+        $item->url = new \moodle_url('/local/edtutor/allocations.php');
+        $item->title = get_string('manageallocationsmenu', 'local_edtutor');
+        $item->titleidentifier = 'manageallocationsmenu,local_edtutor';
+        $item->pix = 'i/cohort';
+        $hook->add_navitem($item);
     }
 
     /**
