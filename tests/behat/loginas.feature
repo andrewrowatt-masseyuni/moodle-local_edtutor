@@ -1,4 +1,4 @@
-@local @local_edtutor @local_edtutor_loginas
+@local @local_edtutor @local_edtutor_loginas @javascript
 Feature: Education tutors can log in as their allocated students at site level
   In order to act for my students across all of their courses
   As a tutor
@@ -26,9 +26,11 @@ Feature: Education tutors can log in as their allocated students at site level
       | tutor1 | 27010001 |
       | tutor1 | 27010002 |
       | tutor1 | 27010003 |
-    And the following "permission overrides" exist:
-      | capability           | permission | role | contextlevel | reference |
-      | local/edtutor:submit | Allow      | user | System       |           |
+    And the following "role assigns" exist:
+      | user   | role    | contextlevel | reference |
+      | tutor1 | edtutor | System       |           |
+      | tutor2 | edtutor | System       |           |
+    And I change the window size to "large"
 
   Scenario: A tutor sees a login-as entry for each allocated student
     Given I log in as "tutor1"

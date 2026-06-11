@@ -65,7 +65,7 @@ $details->data[] = [get_string('createdby', 'local_edtutor'),
     s(manager::name_with_username($submission->get('tutorid')))];
 $details->data[] = [get_string('createdon', 'local_edtutor'), $info->timecreated];
 if ($submission->get('failurereason')) {
-    $details->data[] = [get_string('reason', 'local_edtutor'), $submission->get('failurereason')];
+    $details->data[] = [get_string('reason', 'local_edtutor'), s($submission->get('failurereason'))];
 }
 if ($submission->get('status') == submission::STATUS_COMPLETED) {
     $completedby = core_user::get_user($submission->get('completedby'));
@@ -80,7 +80,7 @@ $text = (string)$submission->get('onlinetext');
 if (trim(html_to_text($text)) === '') {
     echo html_writer::div(get_string('notext', 'local_edtutor'));
 } else {
-    echo $OUTPUT->box(format_text($text, $submission->get('onlinetextformat')));
+    echo $OUTPUT->box(format_text($text, $submission->get('onlinetextformat'), ['context' => $context]));
 }
 
 // Uploaded files.
@@ -123,11 +123,16 @@ if ($canprocess && $submission->get('status') == submission::STATUS_ESCALATED) {
             get_string('gotoassignment', 'local_edtutor'),
             ['class' => 'btn btn-secondary mr-1']
         );
-        $actions[] = html_writer::link(new moodle_url('/course/loginas.php', [
-            'id' => $submission->get('courseid'),
-            'user' => $submission->get('studentid'),
-            'sesskey' => sesskey(),
-        ]), get_string('loginasstudent', 'local_edtutor'), ['class' => 'btn btn-secondary mr-1']);
+        // Core's course login-as page enforces moodle/user:loginas in the course,
+        // so only offer the link to staff who would get through it.
+        $coursecontext = context_course::instance($submission->get('courseid'));
+        if (has_capability('moodle/user:loginas', $coursecontext)) {
+            $actions[] = html_writer::link(new moodle_url('/course/loginas.php', [
+                'id' => $submission->get('courseid'),
+                'user' => $submission->get('studentid'),
+                'sesskey' => sesskey(),
+            ]), get_string('loginasstudent', 'local_edtutor'), ['class' => 'btn btn-secondary mr-1']);
+        }
     }
     $actions[] = html_writer::link(
         new moodle_url('/local/edtutor/complete.php', ['id' => $submission->get('id')]),

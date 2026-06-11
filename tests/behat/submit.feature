@@ -22,15 +22,13 @@ Feature: Submit an assignment on behalf of a student
     And the following "local_edtutor > allocations" exist:
       | tutor  | student  |
       | tutor1 | student1 |
-    And the following "permission overrides" exist:
-      | capability           | permission | role | contextlevel | reference |
-      | local/edtutor:submit | Allow      | user | System       |           |
+    And the following "role assigns" exist:
+      | user   | role    | contextlevel | reference |
+      | tutor1 | edtutor | System       |           |
+    And I change the window size to "large"
 
   Scenario: A tutor with the on-behalf capability submits work automatically
-    Given the following "permission overrides" exist:
-      | capability                     | permission | role    | contextlevel | reference |
-      | mod/assign:editothersubmission | Allow      | teacher | Course       | C1        |
-    And I am on the "local_edtutor > submit" page logged in as "tutor1"
+    Given I am on the "local_edtutor > submit" page logged in as "tutor1"
     When I select "Student One (student1)" from the "Student" singleselect
     And I select "Course 1" from the "Course" singleselect
     And I select "Assignment 1" from the "Assignment" singleselect
@@ -40,7 +38,12 @@ Feature: Submit an assignment on behalf of a student
     And I should see "Student One"
 
   Scenario: A submission is escalated when the tutor lacks the on-behalf capability
-    Given I am on the "local_edtutor > submit" page logged in as "tutor1"
+    # The edtutor role normally grants mod/assign:editothersubmission; take it
+    # away so the submission cannot be made automatically.
+    Given the following "permission overrides" exist:
+      | capability                     | permission | role    | contextlevel | reference |
+      | mod/assign:editothersubmission | Prevent    | edtutor | System       |           |
+    And I am on the "local_edtutor > submit" page logged in as "tutor1"
     When I select "Student One (student1)" from the "Student" singleselect
     And I select "Course 1" from the "Course" singleselect
     And I select "Assignment 1" from the "Assignment" singleselect

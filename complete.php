@@ -22,7 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use local_edtutor\manager;
 use local_edtutor\submission;
 use local_edtutor\submission_service;
 use local_edtutor\form\complete_form;
@@ -34,9 +33,7 @@ $id = required_param('id', PARAM_INT);
 
 $context = context_system::instance();
 require_login();
-if (!manager::can_process((int)$USER->id, $context)) {
-    throw new moodle_exception('error:cannotprocess', 'local_edtutor');
-}
+require_capability('local/edtutor:processsubmissions', $context);
 
 $submission = submission::get_record(['id' => $id]);
 if (!$submission) {

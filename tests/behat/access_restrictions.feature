@@ -29,12 +29,12 @@ Feature: Access restrictions are honoured when submitting on behalf of a student
       | tutor1 | student1 |
     And the following config values are set as admin:
       | enableavailability | 1 |
-    # The tutor can otherwise submit automatically, so only the access
+    # The edtutor role lets the tutor submit automatically, so only the access
     # restriction should stand in the way.
-    And the following "permission overrides" exist:
-      | capability                     | permission | role    | contextlevel | reference |
-      | local/edtutor:submit           | Allow      | user    | System       |           |
-      | mod/assign:editothersubmission | Allow      | teacher | Course       | C1        |
+    And the following "role assigns" exist:
+      | user   | role    | contextlevel | reference |
+      | tutor1 | edtutor | System       |           |
+    And I change the window size to "large"
 
   Scenario: A submission is escalated when access restrictions stop the student reaching the assignment
     Given I am on the "local_edtutor > submit" page logged in as "tutor1"

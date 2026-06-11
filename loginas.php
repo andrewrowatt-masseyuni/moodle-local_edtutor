@@ -18,7 +18,7 @@
  * Log in as an allocated student at site level, or return to the tutor's own account.
  *
  * Authorisation is based on the tutor-student allocation (plus the
- * local/edtutor:submit capability), not moodle/user:loginas. Switching
+ * local/edtutor:loginas capability), not moodle/user:loginas. Switching
  * between students is supported without logging out.
  *
  * @package    local_edtutor

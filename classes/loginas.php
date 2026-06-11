@@ -41,7 +41,7 @@ class loginas {
             throw new \moodle_exception('error:cannotloginas', 'local_edtutor');
         }
 
-        if (!has_capability('local/edtutor:submit', \context_system::instance(), $realuserid)) {
+        if (!has_capability('local/edtutor:loginas', \context_system::instance(), $realuserid)) {
             throw new \moodle_exception('error:cannotloginas', 'local_edtutor');
         }
 
@@ -75,9 +75,17 @@ class loginas {
         }
 
         $realuser = $_SESSION['REALUSER'];
+
+        // Match the approach of \core\session\manager.
+        // phpcs:ignore moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
         $studentid = $GLOBALS['USER']->id;
 
+        // Match the approach of \core\session\manager.
+        // phpcs:ignore moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
         $GLOBALS['SESSION'] = $_SESSION['REALSESSION'];
+
+        // Match the approach of \core\session\manager.
+        // phpcs:ignore moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
         $_SESSION['SESSION'] =& $GLOBALS['SESSION'];
         unset($_SESSION['REALSESSION']);
         unset($_SESSION['REALUSER']);

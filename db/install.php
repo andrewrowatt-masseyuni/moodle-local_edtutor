@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Create the education tutor system roles and assign their capabilities.
  *
@@ -52,6 +50,7 @@ function xmldb_local_edtutor_install() {
         );
         set_role_contextlevels($tutorroleid, [CONTEXT_SYSTEM]);
         assign_capability('local/edtutor:submit', CAP_ALLOW, $tutorroleid, $systemcontext->id);
+        assign_capability('local/edtutor:loginas', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('mod/assign:editothersubmission', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('moodle/site:viewuseridentity', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         // Required so core require_login() lets the tutor enter a student's
@@ -61,7 +60,8 @@ function xmldb_local_edtutor_install() {
         assign_capability('moodle/course:view', CAP_ALLOW, $tutorroleid, $systemcontext->id);
     }
 
-    // Education tutor manager: manages tutor to student allocations.
+    // Education tutor manager: manages tutor to student allocations and
+    // processes escalated submissions.
     if (!$DB->record_exists('role', ['shortname' => 'edtutormanager'])) {
         $managerroleid = create_role(
             get_string('edtutormanagerrole', 'local_edtutor'),
@@ -70,6 +70,10 @@ function xmldb_local_edtutor_install() {
         );
         set_role_contextlevels($managerroleid, [CONTEXT_SYSTEM]);
         assign_capability('local/edtutor:manageallocations', CAP_ALLOW, $managerroleid, $systemcontext->id);
+        assign_capability('local/edtutor:processsubmissions', CAP_ALLOW, $managerroleid, $systemcontext->id);
+        assign_capability('moodle/user:viewalldetails', CAP_ALLOW, $managerroleid, $systemcontext->id);
+        assign_capability('moodle/site:viewuseridentity', CAP_ALLOW, $managerroleid, $systemcontext->id);
+        assign_capability('moodle/role:assign', CAP_ALLOW, $managerroleid, $systemcontext->id);
     }
 
     // Point the tutor role setting at the role we just created so that the

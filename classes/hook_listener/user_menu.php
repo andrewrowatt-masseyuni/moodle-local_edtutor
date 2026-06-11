@@ -54,8 +54,10 @@ class user_menu {
 
         $params = [];
         $course = $PAGE->course;
-        if ($course && $course->id != SITEID
-                && !empty(manager::get_allocated_students_in_course((int)$USER->id, $course->id))) {
+        if (
+            $course && $course->id != SITEID
+                && !empty(manager::get_allocated_students_in_course((int)$USER->id, $course->id))
+        ) {
             $params['courseid'] = $course->id;
         }
 
@@ -90,7 +92,7 @@ class user_menu {
             return;
         }
 
-        if (!has_capability('local/edtutor:submit', \context_system::instance(), $realuser->id)) {
+        if (!has_capability('local/edtutor:loginas', \context_system::instance(), $realuser->id)) {
             return;
         }
 
@@ -101,14 +103,12 @@ class user_menu {
 
         $loggedinas = \core\session\manager::is_loggedinas();
 
-
-
         if ($loggedinas) {
             $divider = new \stdClass();
             $divider->itemtype = 'divider';
             $divider->titleidentifier = 'divider,local_edtutor';
             $hook->add_navitem($divider);
-            
+
             $item = new \stdClass();
             $item->itemtype = 'link';
             $item->url = new \moodle_url('/local/edtutor/loginas.php', ['userid' => 0, 'sesskey' => sesskey()]);
@@ -119,16 +119,21 @@ class user_menu {
         }
 
         foreach ($students as $student) {
-            $title = get_string('loginasstudentname', 'local_edtutor',
-                fullname($student) . ' (' . $student->username . ')');
+            $title = get_string(
+                'loginasstudentname',
+                'local_edtutor',
+                fullname($student) . ' (' . $student->username . ')'
+            );
             if ($loggedinas && $USER->id == $student->id) {
-                $title .= ' ✓';
+                $title = get_string('loginasstudentcurrent', 'local_edtutor', $title);
             }
 
             $item = new \stdClass();
             $item->itemtype = 'link';
-            $item->url = new \moodle_url('/local/edtutor/loginas.php',
-                ['userid' => $student->id, 'sesskey' => sesskey()]);
+            $item->url = new \moodle_url(
+                '/local/edtutor/loginas.php',
+                ['userid' => $student->id, 'sesskey' => sesskey()]
+            );
             $item->title = $title;
             $item->titleidentifier = 'loginasstudentname,local_edtutor';
             $item->pix = 'i/user';

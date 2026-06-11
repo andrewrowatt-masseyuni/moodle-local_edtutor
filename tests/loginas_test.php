@@ -250,7 +250,7 @@ final class loginas_test extends \advanced_testcase {
     }
 
     /**
-     * Create a tutor with the submit capability and allocated students.
+     * Create a tutor with the login-as capability and allocated students.
      *
      * @param int $count Number of students to create and allocate.
      * @return array [tutor user record, array of student user records]
@@ -259,7 +259,7 @@ final class loginas_test extends \advanced_testcase {
         $tutor = $this->getDataGenerator()->create_user();
         $roleid = $this->getDataGenerator()->create_role();
         $systemcontext = \context_system::instance();
-        assign_capability('local/edtutor:submit', CAP_ALLOW, $roleid, $systemcontext->id, true);
+        assign_capability('local/edtutor:loginas', CAP_ALLOW, $roleid, $systemcontext->id, true);
         role_assign($roleid, $tutor->id, $systemcontext->id);
 
         $generator = $this->getDataGenerator()->get_plugin_generator('local_edtutor');
