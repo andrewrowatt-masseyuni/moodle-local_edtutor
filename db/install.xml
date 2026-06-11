@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/edtutor/db" VERSION="20260529" COMMENT="XMLDB file for Moodle local/edtutor"
+<XMLDB PATH="local/edtutor/db" VERSION="20260611" COMMENT="XMLDB file for Moodle local/edtutor"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -15,10 +15,12 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="tutorid" TYPE="foreign" FIELDS="tutorid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="tutorid-studentid" UNIQUE="true" FIELDS="tutorid, studentid"/>
-        <INDEX NAME="studentid" UNIQUE="false" FIELDS="studentid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_edtutor_submission" COMMENT="Every on-behalf submission attempt, with its status">
@@ -43,11 +45,17 @@
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="studentid" TYPE="foreign" FIELDS="studentid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="tutorid" TYPE="foreign" FIELDS="tutorid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="cmid" TYPE="foreign" FIELDS="cmid" REFTABLE="course_modules" REFFIELDS="id"/>
+        <KEY NAME="assignid" TYPE="foreign" FIELDS="assignid" REFTABLE="assign" REFFIELDS="id"/>
+        <KEY NAME="contextid" TYPE="foreign" FIELDS="contextid" REFTABLE="context" REFFIELDS="id"/>
+        <KEY NAME="completedby" TYPE="foreign" FIELDS="completedby" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
-        <INDEX NAME="tutorid" UNIQUE="false" FIELDS="tutorid"/>
-        <INDEX NAME="studentid" UNIQUE="false" FIELDS="studentid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -25,8 +25,9 @@ Feature: Complete escalated submissions
       | student  | tutor  | activity | onlinetext                     |
       | student1 | tutor1 | assign1  | Work needing manual submission |
     And the following "role assigns" exist:
-      | user     | role    | contextlevel | reference |
-      | manager1 | manager | System       |           |
+      | user     | role           | contextlevel | reference |
+      | manager1 | edtutormanager | System       |           |
+    And I change the window size to "large"
 
   Scenario: Support staff view an escalated submission and mark it complete
     Given I am on the "local_edtutor > queue" page logged in as "manager1"

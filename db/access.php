@@ -26,6 +26,14 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
 
+    // Log in as an allocated student at site level.
+    'local/edtutor:loginas' => [
+        'riskbitmask'  => RISK_PERSONAL | RISK_DATALOSS,
+        'captype'      => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes'   => [],
+    ],
+
     // Use the tutor area to submit on behalf of an allocated student.
     'local/edtutor:submit' => [
         'riskbitmask'  => RISK_PERSONAL | RISK_DATALOSS,

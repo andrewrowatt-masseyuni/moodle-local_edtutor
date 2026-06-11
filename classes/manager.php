@@ -101,7 +101,10 @@ class manager {
     }
 
     /**
-     * User ids of the configured support staff (resolved from usernames).
+     * User ids of the staff notified when a submission is escalated (resolved from usernames).
+     *
+     * This list only controls who receives the escalation notification; access to the
+     * queue is controlled by the local/edtutor:processsubmissions capability.
      *
      * @return int[]
      */
@@ -131,10 +134,7 @@ class manager {
      * @return bool
      */
     public static function can_process(int $userid, \context $context): bool {
-        if (has_capability('local/edtutor:processsubmissions', $context, $userid)) {
-            return true;
-        }
-        return in_array($userid, self::get_support_staff_userids());
+        return has_capability('local/edtutor:processsubmissions', $context, $userid);
     }
 
     /**
@@ -162,9 +162,9 @@ class manager {
                 'tutorid' => $a->tutorid,
                 'studentid' => $a->studentid,
                 'tutorname' => isset($users[$a->tutorid])
-                    ? fullname($users[$a->tutorid]) . ' (' . $users[$a->tutorid]->username . ')'
+                    ? s(fullname($users[$a->tutorid]) . ' (' . $users[$a->tutorid]->username . ')')
                     : '-',
-                'studentname' => isset($users[$a->studentid]) ? fullname($users[$a->studentid]) : '-',
+                'studentname' => isset($users[$a->studentid]) ? s(fullname($users[$a->studentid])) : '-',
             ];
         }
         return $rows;
@@ -200,7 +200,7 @@ class manager {
         $course = get_course($submission->get('courseid'));
         $cm = get_coursemodule_from_id('assign', $submission->get('cmid'), 0, false, IGNORE_MISSING);
         return (object)[
-            'studentname' => $student ? fullname($student) : '-',
+            'studentname' => $student ? s(fullname($student)) : '-',
             'coursename' => format_string($course->fullname),
             'assignmentname' => $cm ? format_string($cm->name) : '-',
             'statusname' => $submission->get_status_name(),

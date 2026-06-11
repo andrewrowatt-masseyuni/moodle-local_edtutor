@@ -28,9 +28,7 @@ require(__DIR__ . '/../../config.php');
 
 $context = context_system::instance();
 require_login();
-if (!manager::can_process((int)$USER->id, $context)) {
-    throw new moodle_exception('error:cannotprocess', 'local_edtutor');
-}
+require_capability('local/edtutor:processsubmissions', $context);
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/edtutor/queue.php'));
@@ -65,7 +63,7 @@ if (empty($submissions)) {
             [
                 $info->coursename,
                 $info->assignmentname,
-                manager::name_with_username($submission->get('tutorid')),
+                s(manager::name_with_username($submission->get('tutorid'))),
                 $info->timecreated,
                 html_writer::link($info->viewurl, get_string('viewsubmission', 'local_edtutor')),
             ]

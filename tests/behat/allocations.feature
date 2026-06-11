@@ -13,16 +13,12 @@ Feature: Manage education tutor allocations
       | student1 | Student   | One      |
       | student2 | Student   | Two      |
     And the following "role assigns" exist:
-      | user     | role    | contextlevel | reference |
-      | manager1 | manager | System       |           |
-      | tutor1   | teacher | System       |           |
-    And the following config values are set as admin:
-      | roleshortname | teacher | local_edtutor |
+      | user     | role           | contextlevel | reference |
+      | manager1 | edtutormanager | System       |           |
+      | tutor1   | edtutor        | System       |           |
+    And I change the window size to "large"
 
   Scenario: A user who can assign roles may allocate any user as a tutor
-    Given the following "permission overrides" exist:
-      | capability         | permission | role    | contextlevel | reference |
-      | moodle/role:assign | Allow      | manager | System       |           |
     And I am on the "local_edtutor > allocations" page logged in as "manager1"
     When I set the field "Tutor" to "Tutor Two"
     And I set the field "Students" to "Student One"
@@ -32,23 +28,18 @@ Feature: Manage education tutor allocations
     And I should see "Student One"
 
   Scenario: A manager allocates several students to a tutor at once
-    Given the following "permission overrides" exist:
-      | capability         | permission | role    | contextlevel | reference |
-      | moodle/role:assign | Allow      | manager | System       |           |
     And I am on the "local_edtutor > allocations" page logged in as "manager1"
     When I set the field "Tutor" to "Tutor Two"
-    And I set the field "Students" to "Student One"
-    And I set the field "Students" to "Student Two"
+    And I set the field "Students" to "Student One, Student Two"
     And I press "Add allocation"
     Then I should see "2 allocations added"
     And I should see "Student One"
     And I should see "Student Two"
 
   Scenario: A user who cannot assign roles is limited to existing tutors
-    Given the following "permission overrides" exist:
-      | capability         | permission | role    | contextlevel | reference |
-      | moodle/role:assign | Prevent    | manager | System       |           |
-    And I am on the "local_edtutor > allocations" page logged in as "manager1"
+    # The edtutormanager role does not include moodle/role:assign, so no
+    # override is needed for the manager to be unable to assign roles.
+    Given I am on the "local_edtutor > allocations" page logged in as "manager1"
     When I set the field "Tutor" to "Tutor One"
     And I set the field "Students" to "Student One"
     And I press "Add allocation"
