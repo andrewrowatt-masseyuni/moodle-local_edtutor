@@ -104,6 +104,11 @@ class user_menu {
 
 
         if ($loggedinas) {
+            $divider = new \stdClass();
+            $divider->itemtype = 'divider';
+            $divider->titleidentifier = 'divider,local_edtutor';
+            $hook->add_navitem($divider);
+            
             $item = new \stdClass();
             $item->itemtype = 'link';
             $item->url = new \moodle_url('/local/edtutor/loginas.php', ['userid' => 0, 'sesskey' => sesskey()]);
