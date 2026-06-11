@@ -14,19 +14,40 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_edtutor\event;
+
 /**
- * Version information for Education tutor submissions.
+ * Event triggered when a tutor returns to their own account from a login-as session.
  *
  * @package    local_edtutor
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class loginas_returned extends \core\event\base {
+    /**
+     * Initialise the event data.
+     */
+    protected function init() {
+        $this->data['crud'] = 'r';
+        $this->data['edulevel'] = self::LEVEL_OTHER;
+    }
 
-defined('MOODLE_INTERNAL') || die();
+    /**
+     * Return the localised event name.
+     *
+     * @return string
+     */
+    public static function get_name() {
+        return get_string('event_loginas_returned', 'local_edtutor');
+    }
 
-$plugin->component    = 'local_edtutor';
-$plugin->release      = '0.2.0';
-$plugin->version      = 2026061100;
-$plugin->requires     = 2024100700;
-$plugin->supported    = [405, 405];
-$plugin->maturity     = MATURITY_ALPHA;
+    /**
+     * Return a description of the event.
+     *
+     * @return string
+     */
+    public function get_description() {
+        return "The user with id '{$this->userid}' returned to their own account from a login-as session " .
+            "as the user with id '{$this->relateduserid}'.";
+    }
+}

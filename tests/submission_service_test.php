@@ -44,6 +44,7 @@ final class submission_service_test extends \advanced_testcase {
             'assignsubmission_onlinetext_enabled' => 1,
             'assignsubmission_file_enabled' => 1,
             'assignsubmission_file_maxfiles' => 3,
+            'assignsubmission_file_maxsizebytes' => 0,
             'submissiondrafts' => 0,
         ]);
         $cm = get_fast_modinfo($course)->get_cm($assign->cmid);
