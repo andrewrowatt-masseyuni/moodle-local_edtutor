@@ -54,6 +54,11 @@ function xmldb_local_edtutor_install() {
         assign_capability('local/edtutor:submit', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('mod/assign:editothersubmission', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('moodle/site:viewuseridentity', CAP_ALLOW, $tutorroleid, $systemcontext->id);
+        // Required so core require_login() lets the tutor enter a student's
+        // course during login-as: the real user must pass is_viewing(), which
+        // checks moodle/course:view, when not enrolled in the course.
+        // Acknowledgement that this enables tutor to view all courses.
+        assign_capability('moodle/course:view', CAP_ALLOW, $tutorroleid, $systemcontext->id);
     }
 
     // Education tutor manager: manages tutor to student allocations.

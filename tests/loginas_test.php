@@ -213,6 +213,43 @@ final class loginas_test extends \advanced_testcase {
     }
 
     /**
+     * A tutor with the installed edtutor role can enter a student's course
+     * during login-as without being enrolled in the course themselves.
+     *
+     * Core require_login() requires the real user behind a login-as session
+     * to be enrolled in the course or pass is_viewing(); the edtutor role
+     * carries moodle/course:view at system level to satisfy the latter.
+     */
+    public function test_tutor_can_enter_students_course_during_loginas(): void {
+        global $DB, $USER;
+        $this->resetAfterTest();
+
+        [$tutor, $students] = $this->create_tutor_with_students(1);
+        $student = reset($students);
+
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($student->id, $course->id, 'student');
+        $coursecontext = \context_course::instance($course->id);
+
+        // Without the installed role the real tutor fails core's gate.
+        $this->assertFalse(is_viewing($coursecontext, $tutor));
+
+        $edtutorrole = $DB->get_record('role', ['shortname' => 'edtutor'], '*', MUST_EXIST);
+        role_assign($edtutorrole->id, $tutor->id, \context_system::instance()->id);
+
+        $this->setUser($tutor);
+        loginas::loginas_student($student->id);
+
+        $realuser = \core\session\manager::get_realuser();
+        $this->assertFalse(is_enrolled($coursecontext, $realuser->id, '', true));
+        $this->assertTrue(is_viewing($coursecontext, $realuser));
+
+        // The student's course loads for the logged-in-as session.
+        require_login($course, false, null, false, true);
+        $this->assertEquals($student->id, $USER->id);
+    }
+
+    /**
      * Create a tutor with the submit capability and allocated students.
      *
      * @param int $count Number of students to create and allocate.
