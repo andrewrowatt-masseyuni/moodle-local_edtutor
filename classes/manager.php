@@ -275,17 +275,26 @@ class manager {
     }
 
     /**
-     * Assign the education tutor role to a user at system context.
+     * Align a tutor's education tutor role assignment with their allocations.
      *
-     * @param int $userid
-     * @return bool True if the role exists and was assigned (or already held), false if the role was not found.
+     * Assigns the role at system context while the tutor has at least one
+     * allocation and unassigns it once they have none.
+     *
+     * @param int $tutorid
+     * @return bool True if the role exists and is now in sync, false if the role was not found.
      */
-    public static function assign_tutor_role(int $userid): bool {
+    public static function sync_tutor_role(int $tutorid): bool {
+        global $DB;
         $roleid = self::get_tutor_roleid();
         if (!$roleid) {
             return false;
         }
-        role_assign($roleid, $userid, \context_system::instance()->id);
+        $contextid = \context_system::instance()->id;
+        if ($DB->record_exists('local_edtutor_allocation', ['tutorid' => $tutorid])) {
+            role_assign($roleid, $tutorid, $contextid);
+        } else {
+            role_unassign($roleid, $tutorid, $contextid);
+        }
         return true;
     }
 

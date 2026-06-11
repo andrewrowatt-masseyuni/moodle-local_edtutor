@@ -47,7 +47,10 @@ if ($remove) {
     $record = allocation::get_record(['id' => $remove]);
     if ($record) {
         if (optional_param('confirm', 0, PARAM_BOOL)) {
+            $tutorid = (int)$record->get('tutorid');
             $record->delete();
+            // Tutors only hold the education tutor role while they have allocations.
+            manager::sync_tutor_role($tutorid);
             redirect(
                 $baseurl,
                 get_string('allocationremoved', 'local_edtutor'),
@@ -88,7 +91,7 @@ if ($data = $form->get_data()) {
         $added++;
     }
     // Site admins can grant the education tutor role; for everyone else the tutor already holds it.
-    if ($added && manager::can_provision_tutor_role() && !manager::assign_tutor_role($tutorid)) {
+    if ($added && manager::can_provision_tutor_role() && !manager::sync_tutor_role($tutorid)) {
         redirect(
             $baseurl,
             get_string('allocationaddednorole', 'local_edtutor', get_config('local_edtutor', 'roleshortname')),

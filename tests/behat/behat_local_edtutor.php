@@ -18,6 +18,8 @@
 
 require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
 
+use Behat\Mink\Exception\ExpectationException;
+
 /**
  * Behat page resolvers for local_edtutor.
  *
@@ -53,6 +55,44 @@ class behat_local_edtutor extends behat_base {
                 return new moodle_url('/local/edtutor/queue.php');
             default:
                 throw new Exception('Unrecognised local_edtutor page type "' . $page . '."');
+        }
+    }
+
+    /**
+     * Checks that a user is assigned a role in the system context.
+     *
+     * @Then /^the "(?P<username>(?:[^"]|\\")*)" user should be assigned the "(?P<roleshortname>(?:[^"]|\\")*)" role in the system context$/
+     * @param string $username the username of the user to check.
+     * @param string $roleshortname the shortname of the role.
+     */
+    public function user_should_be_assigned_system_role(string $username, string $roleshortname): void {
+        global $DB;
+
+        $user = $DB->get_record('user', ['username' => $username], '*', MUST_EXIST);
+        $role = $DB->get_record('role', ['shortname' => $roleshortname], '*', MUST_EXIST);
+
+        if (!user_has_role_assignment($user->id, $role->id, context_system::instance()->id)) {
+            throw new ExpectationException('The user "' . $username . '" is not assigned the "' .
+                $roleshortname . '" role in the system context.', $this->getSession());
+        }
+    }
+
+    /**
+     * Checks that a user is not assigned a role in the system context.
+     *
+     * @Then /^the "(?P<username>(?:[^"]|\\")*)" user should not be assigned the "(?P<roleshortname>(?:[^"]|\\")*)" role in the system context$/
+     * @param string $username the username of the user to check.
+     * @param string $roleshortname the shortname of the role.
+     */
+    public function user_should_not_be_assigned_system_role(string $username, string $roleshortname): void {
+        global $DB;
+
+        $user = $DB->get_record('user', ['username' => $username], '*', MUST_EXIST);
+        $role = $DB->get_record('role', ['shortname' => $roleshortname], '*', MUST_EXIST);
+
+        if (user_has_role_assignment($user->id, $role->id, context_system::instance()->id)) {
+            throw new ExpectationException('The user "' . $username . '" is assigned the "' .
+                $roleshortname . '" role in the system context, but should not be.', $this->getSession());
         }
     }
 }
