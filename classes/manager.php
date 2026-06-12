@@ -49,14 +49,17 @@ class manager {
      * @return array Array of user records keyed by user id.
      */
     public static function get_allocated_students_in_course(int $tutorid, int $courseid): array {
+        global $DB;
         $context = \context_course::instance($courseid);
-        $students = self::get_allocated_students($tutorid);
-        foreach ($students as $id => $student) {
-            if (!is_enrolled($context, $id)) {
-                unset($students[$id]);
-            }
-        }
-        return $students;
+        [$enrolsql, $enrolparams] = get_enrolled_sql($context);
+        $userfields = \core_user\fields::for_name()->get_sql('u')->selects;
+        $sql = "SELECT u.id, u.username $userfields
+                  FROM {local_edtutor_allocation} a
+                  JOIN {user} u ON u.id = a.studentid
+                  JOIN ($enrolsql) eu ON eu.id = u.id
+                 WHERE a.tutorid = :tutorid AND u.deleted = 0
+              ORDER BY u.lastname, u.firstname";
+        return $DB->get_records_sql($sql, array_merge($enrolparams, ['tutorid' => $tutorid]));
     }
 
     /**
@@ -196,12 +199,13 @@ class manager {
      * @return \stdClass Object with studentname, coursename, assignmentname, statusname, timecreated, viewurl.
      */
     public static function describe_submission(submission $submission): \stdClass {
+        global $DB;
         $student = \core_user::get_user($submission->get('studentid'));
-        $course = get_course($submission->get('courseid'));
+        $course = $DB->get_record('course', ['id' => $submission->get('courseid')], 'id, fullname');
         $cm = get_coursemodule_from_id('assign', $submission->get('cmid'), 0, false, IGNORE_MISSING);
         return (object)[
             'studentname' => $student ? s(fullname($student)) : '-',
-            'coursename' => format_string($course->fullname),
+            'coursename' => $course ? format_string($course->fullname) : '-',
             'assignmentname' => $cm ? format_string($cm->name) : '-',
             'statusname' => $submission->get_status_name(),
             'timecreated' => userdate($submission->get('timecreated')),

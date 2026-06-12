@@ -49,6 +49,14 @@ if ($submission->get('status') == submission::STATUS_COMPLETED) {
         \core\output\notification::NOTIFY_WARNING
     );
 }
+if ($submission->get('status') != submission::STATUS_ESCALATED) {
+    redirect(
+        $viewurl,
+        get_string('error:notescalated', 'local_edtutor'),
+        null,
+        \core\output\notification::NOTIFY_WARNING
+    );
+}
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/local/edtutor/complete.php', ['id' => $id]));
