@@ -24,6 +24,15 @@ namespace local_edtutor;
  * switch directly between allocated students by restoring the tutor's
  * real session before starting the next login-as session.
  *
+ * This exists instead of core's login-as because core is either too powerful
+ * (system context impersonates anyone, admin-only) or too narrow (course
+ * context is limited to one enrolled course), and core forces a full logout to
+ * switch users or return. This class reuses \core\session\manager::loginas()
+ * for the session swap and adds only an allocation-gated, least-privilege
+ * policy plus the switch/return-without-logout behaviour core omits. See
+ * docs/loginas-rationale.md for the full rationale and security trade-off.
+ *
+ * @see \core\session\manager::loginas()
  * @package    local_edtutor
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
