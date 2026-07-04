@@ -29,6 +29,7 @@
 require(__DIR__ . '/../../config.php');
 
 $userid = optional_param('userid', 0, PARAM_INT); // 0 means return to my own account.
+$courseid = optional_param('courseid', 0, PARAM_INT); // Optional course to land in after switching.
 
 $PAGE->set_url(new moodle_url('/local/edtutor/loginas.php', ['userid' => $userid]));
 $PAGE->set_context(context_system::instance());
@@ -41,7 +42,7 @@ if ($userid === 0) {
         \local_edtutor\loginas::restore_real_user();
         \core\notification::success(get_string('returnedtomyaccount', 'local_edtutor'));
     }
-    redirect(new moodle_url('/my/'));
+    redirect(new moodle_url('/local/edtutor/dashboard.php'));
 }
 
 \local_edtutor\loginas::loginas_student($userid);
