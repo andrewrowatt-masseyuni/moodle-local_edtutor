@@ -46,4 +46,7 @@ if ($userid === 0) {
 }
 
 \local_edtutor\loginas::loginas_student($userid);
+if ($courseid) {
+    redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
+}
 redirect(new moodle_url('/my/courses.php'));

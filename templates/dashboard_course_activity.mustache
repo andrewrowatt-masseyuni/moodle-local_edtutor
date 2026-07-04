@@ -75,12 +75,6 @@
                 </span>
                 {{> local_edtutor/dashboard_activity_status }}
                 <span class="ml-auto text-nowrap">
-                    {{#canloginas}}
-                        <a class="btn btn-outline-primary btn-sm" href="{{loginasurl}}">
-                            <i class="fa-solid fa-right-to-bracket mr-1" aria-hidden="true"></i>
-                            {{#str}} loginas, local_edtutor {{/str}}
-                        </a>
-                    {{/canloginas}}
                     {{^submitted}}
                         {{#cansubmit}}
                             {{#submittable}}
@@ -100,6 +94,12 @@
                             {{/submittable}}
                         {{/cansubmit}}
                     {{/submitted}}
+                    {{#canloginas}}
+                        <a class="btn btn-outline-primary btn-sm" href="{{loginasurl}}">
+                            <i class="fa-solid fa-right-to-bracket mr-1" aria-hidden="true"></i>
+                            {{#str}} loginas, local_edtutor {{/str}}
+                        </a>
+                    {{/canloginas}}
                 </span>
             </li>
         {{/students}}

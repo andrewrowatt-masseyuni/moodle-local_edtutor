@@ -103,6 +103,12 @@ class dashboard implements \core\output\named_templatable, \renderable {
             foreach (manager::get_student_courses($studentid) as $course) {
                 $courseid = (int)$course->id;
                 $coursename = format_string($course->fullname);
+                // Login-as links from a course row land in that course.
+                $courseloginasurl = (new \moodle_url('/local/edtutor/loginas.php', [
+                    'userid' => $studentid,
+                    'courseid' => $courseid,
+                    'sesskey' => sesskey(),
+                ]))->out(false);
 
                 $activitiesdata = [];
                 foreach (manager::get_student_course_activities($courseid, $studentid) as $cm) {
@@ -172,7 +178,7 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         'id' => $studentid,
                         'fullname' => fullname($student),
                         'username' => $student->username,
-                        'loginasurl' => $loginasurl,
+                        'loginasurl' => $courseloginasurl,
                     ]);
                 }
 
@@ -181,6 +187,7 @@ class dashboard implements \core\output\named_templatable, \renderable {
                 $coursesdata[] = [
                     'id' => $courseid,
                     'fullname' => $coursename,
+                    'loginasurl' => $courseloginasurl,
                     'lastaccess' => $courseaccess ? userdate($courseaccess) : get_string('never'),
                     'hasactivities' => !empty($activitiesdata),
                     'hasdueactivities' => !empty($withdue),

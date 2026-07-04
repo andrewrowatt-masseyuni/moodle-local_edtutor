@@ -35,8 +35,8 @@ Feature: Education Tutors have a dashboard of their allocated students
     And I should see "Assignment 1" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
     And I should see "Not submitted" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
     And I should see "Overdue" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
-    And I should see "Login on behalf" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
-    And I should see "Submit on behalf" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
+    And I should see "Login as" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
+    And "a[href*='submit.php']" "css_element" should exist in the "[data-region='local_edtutor-view-bystudent']" "css_element"
     And I should see "Set student preferences" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
     And I should see "Quiz 1" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
     And I should see "The following activities have no due date set" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
@@ -49,6 +49,12 @@ Feature: Education Tutors have a dashboard of their allocated students
     And I reload the page
     And "[data-region='local_edtutor-view-bystudent'].d-none" "css_element" should exist
     And I should see "Course 1" in the "[data-region='local_edtutor-view-bycourse']" "css_element"
+
+  Scenario: Login on behalf from a course row lands in that course
+    Given I am on the "local_edtutor > dashboard" page logged in as "tutor1"
+    When I click on "Login as" "link" in the "[data-region='local_edtutor-view-bystudent']" "css_element"
+    Then I should see "You are logged in as Student One" in the "page-footer" "region"
+    And I should see "Course 1"
 
   Scenario: A tutor opens the dashboard from the user menu
     Given I log in as "tutor1"

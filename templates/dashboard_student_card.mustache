@@ -37,7 +37,9 @@
     * username - Student username (student ID).
     * lastaccess - Most recent course access, already formatted.
     * overdue - Whether any activity in any course is overdue.
-    * loginasurl - URL to log in as this student (includes sesskey).
+    * loginasurl - URL to log in as this student (includes sesskey). Each
+      course also carries its own loginasurl with a courseid, so login-as
+      from a course row lands in that course.
     * hascourses - Whether the student is enrolled in any course.
     * courses - Courses with their activities and submission statuses.
 
@@ -54,6 +56,7 @@
             {
                 "id": 5,
                 "fullname": "Course 1",
+                "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&courseid=5&sesskey=xyz",
                 "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
                 "hasactivities": true,
                 "hasdueactivities": true,
