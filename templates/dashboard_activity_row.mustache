@@ -1,0 +1,83 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/dashboard_activity_row
+
+    One activity row on the Education Tutor dashboard by-student view.
+
+    Quizzes cannot be submitted on behalf of a student, so their action
+    button is disabled with an explanatory tooltip. The cansubmit flag is
+    inherited from the parent template context.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * cmid - Course module id.
+    * name - Activity name.
+    * iconclass - Font Awesome classes for the activity type icon.
+    * submittable - Whether the activity supports submit on behalf.
+    * submitted - Whether the student has submitted.
+    * hasduedate - Whether a due date applies.
+    * duedate - Effective due date, formatted.
+    * extension - Whether an extension is applied.
+    * overdue - Whether the activity is overdue for this student.
+    * submiturl - URL of the submit on behalf page for this activity.
+
+    Example context (json):
+    {
+        "cmid": 12,
+        "name": "Assignment 1",
+        "iconclass": "fa-solid fa-file-pen",
+        "submittable": true,
+        "submitted": false,
+        "hasduedate": true,
+        "duedate": "Friday, 4 July 2025, 5:00 PM",
+        "extension": true,
+        "overdue": true,
+        "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12",
+        "cansubmit": true
+    }
+}}
+<div class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center">
+    <span class="mr-2">
+        <i class="{{iconclass}} mr-1" aria-hidden="true"></i>{{name}}
+    </span>
+    {{> local_edtutor/dashboard_activity_status }}
+    {{^submitted}}
+        {{#cansubmit}}
+            {{#submittable}}
+                <a class="btn btn-outline-primary btn-sm ml-auto" href="{{submiturl}}">
+                    <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
+                    {{#str}} submitonbehalfaction, local_edtutor {{/str}}
+                </a>
+            {{/submittable}}
+            {{^submittable}}
+                <span class="ml-auto d-inline-block" tabindex="0"
+                      title="{{#str}} cannotsubmitonbehalf, local_edtutor {{/str}}">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+                        <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
+                        {{#str}} submitonbehalfaction, local_edtutor {{/str}}
+                    </button>
+                </span>
+            {{/submittable}}
+        {{/cansubmit}}
+    {{/submitted}}
+</div>

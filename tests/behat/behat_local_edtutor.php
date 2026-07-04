@@ -35,9 +35,11 @@ class behat_local_edtutor extends behat_base {
      * Recognised page names are:
      * | Page        | Description                                  |
      * | tutor area  | The tutor landing page                       |
+     * | dashboard   | The Education Tutor dashboard                |
      * | submit      | Submit on behalf of a student                |
      * | allocations | Manage tutor to student allocations          |
      * | queue       | Submissions awaiting manual completion       |
+     * | preferences | Set forum preferences for allocated students |
      *
      * @param string $page name of the page, with the component name removed.
      * @return moodle_url the corresponding URL.
@@ -47,12 +49,16 @@ class behat_local_edtutor extends behat_base {
         switch (strtolower($page)) {
             case 'tutor area':
                 return new moodle_url('/local/edtutor/index.php');
+            case 'dashboard':
+                return new moodle_url('/local/edtutor/dashboard.php');
             case 'submit':
                 return new moodle_url('/local/edtutor/submit.php');
             case 'allocations':
                 return new moodle_url('/local/edtutor/allocations.php');
             case 'queue':
                 return new moodle_url('/local/edtutor/queue.php');
+            case 'preferences':
+                return new moodle_url('/local/edtutor/preferences.php');
             default:
                 throw new Exception('Unrecognised local_edtutor page type "' . $page . '."');
         }

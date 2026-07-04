@@ -1,0 +1,158 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/dashboard_student_card
+
+    One allocated student on the Education Tutor dashboard by-student view.
+
+    The card lists the student's courses and the assignments and quizzes they
+    can access in each, in due date order with activities that have no due
+    date grouped below. A card with an overdue activity is emphasised with a
+    red left edge. The capability flags and preferences URL are inherited
+    from the parent template context.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * id - Student user id.
+    * fullname - Student full name.
+    * username - Student username (student ID).
+    * lastaccess - Most recent course access, already formatted.
+    * overdue - Whether any activity in any course is overdue.
+    * loginasurl - URL to log in as this student (includes sesskey).
+    * hascourses - Whether the student is enrolled in any course.
+    * courses - Courses with their activities and submission statuses.
+
+    Example context (json):
+    {
+        "id": 3,
+        "fullname": "Student One",
+        "username": "27010001",
+        "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
+        "overdue": true,
+        "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
+        "hascourses": true,
+        "courses": [
+            {
+                "id": 5,
+                "fullname": "Course 1",
+                "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
+                "hasactivities": true,
+                "hasdueactivities": true,
+                "activities": [
+                    {
+                        "cmid": 12,
+                        "name": "Assignment 1",
+                        "iconclass": "fa-solid fa-file-pen",
+                        "submittable": true,
+                        "submitted": false,
+                        "hasduedate": true,
+                        "duedate": "Friday, 4 July 2025, 5:00 PM",
+                        "extension": true,
+                        "overdue": true,
+                        "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
+                    }
+                ],
+                "hasnoduedate": true,
+                "noduedateactivities": [
+                    {
+                        "cmid": 13,
+                        "name": "Quiz 1",
+                        "iconclass": "fa-solid fa-clipboard-question",
+                        "submittable": false,
+                        "submitted": false,
+                        "hasduedate": false,
+                        "duedate": "",
+                        "extension": false,
+                        "overdue": false,
+                        "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=13"
+                    }
+                ]
+            }
+        ],
+        "canloginas": true,
+        "cansubmit": true,
+        "cansetpreferences": true,
+        "preferencesurl": "https://example.com/local/edtutor/preferences.php"
+    }
+}}
+<div class="card mb-3 local_edtutor-card {{#overdue}}local_edtutor-overdue{{/overdue}}"
+     data-region="local_edtutor-studentcard" data-studentid="{{id}}">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-start">
+            <div class="mr-auto">
+                <h5 class="card-title mb-1">
+                    <i class="fa-solid fa-user mr-1" aria-hidden="true"></i>{{fullname}}
+                    <small class="text-muted">({{username}})</small>
+                </h5>
+                <div class="small text-muted mb-2">
+                    <i class="fa-solid fa-clock mr-1" aria-hidden="true"></i>
+                    {{#str}} lastcourseaccess, local_edtutor {{/str}}: {{lastaccess}}
+                </div>
+            </div>
+            {{#cansetpreferences}}
+                <a class="btn btn-outline-secondary btn-sm" href="{{preferencesurl}}">
+                    <i class="fa-solid fa-gear mr-1" aria-hidden="true"></i>
+                    {{#str}} setstudentpreferences, local_edtutor {{/str}}
+                </a>
+            {{/cansetpreferences}}
+        </div>
+        {{#courses}}
+            <div class="border-top pt-2 mt-2">
+                <div class="d-flex flex-wrap align-items-center">
+                    <h6 class="mb-0 mr-2">
+                        <i class="fa-solid fa-book mr-1" aria-hidden="true"></i>{{fullname}}
+                    </h6>
+                    <span class="small text-muted mr-auto">
+                        {{#str}} lastcourseaccess, local_edtutor {{/str}}: {{lastaccess}}
+                    </span>
+                    {{#canloginas}}
+                        <a class="btn btn-outline-primary btn-sm" href="{{loginasurl}}">
+                            <i class="fa-solid fa-right-to-bracket mr-1" aria-hidden="true"></i>
+                            {{#str}} loginonbehalf, local_edtutor {{/str}}
+                        </a>
+                    {{/canloginas}}
+                </div>
+                {{#hasdueactivities}}
+                    <div class="list-group list-group-flush mt-1 ml-4">
+                        {{#activities}}
+                            {{> local_edtutor/dashboard_activity_row }}
+                        {{/activities}}
+                    </div>
+                {{/hasdueactivities}}
+                {{#hasnoduedate}}
+                    <h6 class="small text-muted mt-2 mb-0">{{#str}} noduedateheading, local_edtutor {{/str}}</h6>
+                    <div class="list-group list-group-flush ml-4">
+                        {{#noduedateactivities}}
+                            {{> local_edtutor/dashboard_activity_row }}
+                        {{/noduedateactivities}}
+                    </div>
+                {{/hasnoduedate}}
+                {{^hasactivities}}
+                    <p class="small text-muted mt-2 mb-0">{{#str}} noactivities, local_edtutor {{/str}}</p>
+                {{/hasactivities}}
+            </div>
+        {{/courses}}
+        {{^hascourses}}
+            <p class="text-muted mb-0">{{#str}} nocourses, local_edtutor {{/str}}</p>
+        {{/hascourses}}
+    </div>
+</div>

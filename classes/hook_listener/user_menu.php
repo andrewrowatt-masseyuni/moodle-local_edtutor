@@ -32,9 +32,38 @@ class user_menu {
      * @param \core_user\hook\extend_user_menu $hook The user menu hook.
      */
     public static function extend_user_menu(\core_user\hook\extend_user_menu $hook): void {
+        self::add_dashboard_link($hook);
         self::add_submit_link($hook);
+        self::add_preferences_link($hook);
         self::add_manageallocations_link($hook);
         self::add_loginas_items($hook);
+    }
+
+    /**
+     * Add an "Education Tutor dashboard" link to the user menu.
+     *
+     * Shown on every page for users who hold any of the tutor capabilities.
+     *
+     * @param \core_user\hook\extend_user_menu $hook The user menu hook.
+     */
+    private static function add_dashboard_link(\core_user\hook\extend_user_menu $hook): void {
+        $tutorcaps = ['local/edtutor:submit', 'local/edtutor:loginas', 'local/edtutor:setpreferences'];
+        if (!has_any_capability($tutorcaps, \context_system::instance())) {
+            return;
+        }
+
+        $divider = new \stdClass();
+        $divider->itemtype = 'divider';
+        $divider->titleidentifier = 'divider,local_edtutor';
+        $hook->add_navitem($divider);
+
+        $item = new \stdClass();
+        $item->itemtype = 'link';
+        $item->url = new \moodle_url('/local/edtutor/dashboard.php');
+        $item->title = get_string('dashboardmenu', 'local_edtutor');
+        $item->titleidentifier = 'dashboardmenu,local_edtutor';
+        $item->pix = 'i/dashboard';
+        $hook->add_navitem($item);
     }
 
     /**
@@ -100,6 +129,29 @@ class user_menu {
         $item->title = get_string('submitonbehalf', 'local_edtutor');
         $item->titleidentifier = 'submitonbehalf,local_edtutor';
         $item->pix = 'i/users';
+        $hook->add_navitem($item);
+    }
+
+    /**
+     * Add a "Set student forum preferences" link to the user menu.
+     *
+     * Shown on every page for tutors who can set forum preferences on behalf
+     * of their allocated students. Follows the submit link without a divider
+     * so the tutor's own links are grouped together.
+     *
+     * @param \core_user\hook\extend_user_menu $hook The user menu hook.
+     */
+    private static function add_preferences_link(\core_user\hook\extend_user_menu $hook): void {
+        if (!has_capability('local/edtutor:setpreferences', \context_system::instance())) {
+            return;
+        }
+
+        $item = new \stdClass();
+        $item->itemtype = 'link';
+        $item->url = new \moodle_url('/local/edtutor/preferences.php');
+        $item->title = get_string('studentpreferencesmenu', 'local_edtutor');
+        $item->titleidentifier = 'studentpreferencesmenu,local_edtutor';
+        $item->pix = 'i/settings';
         $hook->add_navitem($item);
     }
 

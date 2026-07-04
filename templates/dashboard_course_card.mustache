@@ -1,0 +1,124 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/dashboard_course_card
+
+    One course on the Education Tutor dashboard by-course view.
+
+    Lists the assignments and quizzes in the course in due date order, with
+    activities that have no due date grouped below. Under each activity are
+    the tutor's allocated students with their submission status and actions.
+    A card is emphasised with a red left edge when any student's activity is
+    overdue. The capability flags are inherited from the parent template
+    context.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * id - Course id.
+    * fullname - Course full name.
+    * overdue - Whether any activity is overdue for any allocated student.
+    * hasactivities - Whether the course has any accessible activities.
+    * hasdueactivities - Whether any activity has a due date.
+    * activities - Activities with due dates, in due date order.
+    * hasnoduedate - Whether any activity has no due date.
+    * noduedateactivities - Activities without a due date.
+
+    Example context (json):
+    {
+        "id": 5,
+        "fullname": "Course 1",
+        "overdue": true,
+        "hasactivities": true,
+        "hasdueactivities": true,
+        "activities": [
+            {
+                "cmid": 12,
+                "name": "Assignment 1",
+                "iconclass": "fa-solid fa-file-pen",
+                "submittable": true,
+                "students": [
+                    {
+                        "id": 3,
+                        "fullname": "Student One",
+                        "username": "27010001",
+                        "submitted": false,
+                        "hasduedate": true,
+                        "duedate": "Friday, 4 July 2025, 5:00 PM",
+                        "extension": true,
+                        "overdue": true,
+                        "submittable": true,
+                        "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
+                        "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
+                    }
+                ]
+            }
+        ],
+        "hasnoduedate": true,
+        "noduedateactivities": [
+            {
+                "cmid": 13,
+                "name": "Quiz 1",
+                "iconclass": "fa-solid fa-clipboard-question",
+                "submittable": false,
+                "students": [
+                    {
+                        "id": 3,
+                        "fullname": "Student One",
+                        "username": "27010001",
+                        "submitted": false,
+                        "hasduedate": false,
+                        "duedate": "",
+                        "extension": false,
+                        "overdue": false,
+                        "submittable": false,
+                        "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
+                        "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=13"
+                    }
+                ]
+            }
+        ],
+        "canloginas": true,
+        "cansubmit": true
+    }
+}}
+<div class="card mb-3 local_edtutor-card {{#overdue}}local_edtutor-overdue{{/overdue}}"
+     data-region="local_edtutor-coursecard" data-courseid="{{id}}">
+    <div class="card-body">
+        <h5 class="card-title mb-1">
+            <i class="fa-solid fa-book mr-1" aria-hidden="true"></i>{{fullname}}
+        </h5>
+        {{#activities}}
+            {{> local_edtutor/dashboard_course_activity }}
+        {{/activities}}
+        {{#hasnoduedate}}
+            <div class="border-top pt-2 mt-2">
+                <h6 class="small text-muted mb-0">{{#str}} noduedateheading, local_edtutor {{/str}}</h6>
+            </div>
+            {{#noduedateactivities}}
+                {{> local_edtutor/dashboard_course_activity }}
+            {{/noduedateactivities}}
+        {{/hasnoduedate}}
+        {{^hasactivities}}
+            <p class="text-muted mb-0">{{#str}} noactivities, local_edtutor {{/str}}</p>
+        {{/hasactivities}}
+    </div>
+</div>

@@ -1,0 +1,107 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/dashboard_course_activity
+
+    One activity on the Education Tutor dashboard by-course view, listing the
+    tutor's allocated students with their submission status and actions.
+
+    Quizzes cannot be submitted on behalf of a student, so their action
+    button is disabled with an explanatory tooltip. The capability flags are
+    inherited from the parent template context.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * cmid - Course module id.
+    * name - Activity name.
+    * iconclass - Font Awesome classes for the activity type icon.
+    * submittable - Whether the activity supports submit on behalf.
+    * students - Students with status fields and action URLs.
+
+    Example context (json):
+    {
+        "cmid": 12,
+        "name": "Assignment 1",
+        "iconclass": "fa-solid fa-file-pen",
+        "submittable": true,
+        "students": [
+            {
+                "id": 3,
+                "fullname": "Student One",
+                "username": "27010001",
+                "submitted": false,
+                "hasduedate": true,
+                "duedate": "Friday, 4 July 2025, 5:00 PM",
+                "extension": true,
+                "overdue": true,
+                "submittable": true,
+                "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
+                "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
+            }
+        ],
+        "canloginas": true,
+        "cansubmit": true
+    }
+}}
+<div class="border-top pt-2 mt-2">
+    <h6 class="mb-1">
+        <i class="{{iconclass}} mr-1" aria-hidden="true"></i>{{name}}
+    </h6>
+    <ul class="list-group list-group-flush ml-4">
+        {{#students}}
+            <li class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center">
+                <span class="mr-2">
+                    <i class="fa-solid fa-user mr-1" aria-hidden="true"></i>{{fullname}}
+                    <small class="text-muted">({{username}})</small>
+                </span>
+                {{> local_edtutor/dashboard_activity_status }}
+                <span class="ml-auto text-nowrap">
+                    {{#canloginas}}
+                        <a class="btn btn-outline-primary btn-sm" href="{{loginasurl}}">
+                            <i class="fa-solid fa-right-to-bracket mr-1" aria-hidden="true"></i>
+                            {{#str}} loginas, local_edtutor {{/str}}
+                        </a>
+                    {{/canloginas}}
+                    {{^submitted}}
+                        {{#cansubmit}}
+                            {{#submittable}}
+                                <a class="btn btn-outline-primary btn-sm" href="{{submiturl}}">
+                                    <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
+                                    {{#str}} submitas, local_edtutor {{/str}}
+                                </a>
+                            {{/submittable}}
+                            {{^submittable}}
+                                <span class="d-inline-block" tabindex="0"
+                                      title="{{#str}} cannotsubmitonbehalf, local_edtutor {{/str}}">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+                                        <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
+                                        {{#str}} submitas, local_edtutor {{/str}}
+                                    </button>
+                                </span>
+                            {{/submittable}}
+                        {{/cansubmit}}
+                    {{/submitted}}
+                </span>
+            </li>
+        {{/students}}
+    </ul>
+</div>

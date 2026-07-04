@@ -48,6 +48,23 @@ function local_edtutor_extend_navigation_course(navigation_node $node, stdClass 
 }
 
 /**
+ * User preferences that the user may update directly, e.g. via the core_user AJAX repository.
+ *
+ * @return array[] Preference definitions keyed by preference name.
+ */
+function local_edtutor_user_preferences(): array {
+    return [
+        'local_edtutor_dashboard_view' => [
+            'type' => PARAM_ALPHA,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 'bystudent',
+            'choices' => ['bystudent', 'bycourse'],
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+    ];
+}
+
+/**
  * Serve the files stored against a submission record.
  *
  * @param stdClass $course Course object.

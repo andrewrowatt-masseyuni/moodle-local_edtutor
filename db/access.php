@@ -42,6 +42,14 @@ $capabilities = [
         'archetypes'   => [],
     ],
 
+    // Set forum preferences (email digest type) for allocated students.
+    'local/edtutor:setpreferences' => [
+        'riskbitmask'  => RISK_PERSONAL,
+        'captype'      => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes'   => [],
+    ],
+
     // View and complete escalated submissions in the queue.
     'local/edtutor:processsubmissions' => [
         'riskbitmask'  => RISK_PERSONAL,

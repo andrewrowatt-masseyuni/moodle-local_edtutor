@@ -33,12 +33,27 @@ class manager {
     public static function get_allocated_students(int $tutorid): array {
         global $DB;
         $userfields = \core_user\fields::for_name()->get_sql('u')->selects;
-        $sql = "SELECT u.id, u.username $userfields
+        $sql = "SELECT u.id, u.username, u.maildigest $userfields
                   FROM {local_edtutor_allocation} a
                   JOIN {user} u ON u.id = a.studentid
                  WHERE a.tutorid = :tutorid AND u.deleted = 0
               ORDER BY u.lastname, u.firstname";
         return $DB->get_records_sql($sql, ['tutorid' => $tutorid]);
+    }
+
+    /**
+     * Forum email digest type options, keyed by the user.maildigest value.
+     *
+     * The keys and labels match the user's own forum preferences page.
+     *
+     * @return string[] Array of digest type names keyed by digest value.
+     */
+    public static function get_maildigest_options(): array {
+        return [
+            0 => get_string('emaildigestoff'),
+            1 => get_string('emaildigestcomplete'),
+            2 => get_string('emaildigestsubjects'),
+        ];
     }
 
     /**
@@ -101,6 +116,127 @@ class manager {
             $assigns[$cm->id] = $cm;
         }
         return $assigns;
+    }
+
+    /**
+     * Assignment and quiz course modules in a course that a student can access.
+     *
+     * Unlike {@see get_course_assignments()} this applies availability
+     * restrictions for the given student, not just module visibility.
+     *
+     * @param int $courseid
+     * @param int $studentid
+     * @return \cm_info[] Array of course modules keyed by cmid.
+     */
+    public static function get_student_course_activities(int $courseid, int $studentid): array {
+        $modinfo = get_fast_modinfo($courseid, $studentid);
+        $activities = [];
+        foreach (['assign', 'quiz'] as $modname) {
+            foreach ($modinfo->get_instances_of($modname) as $cm) {
+                if (!$cm->uservisible) {
+                    continue;
+                }
+                $activities[$cm->id] = $cm;
+            }
+        }
+        return $activities;
+    }
+
+    /**
+     * Submission status and effective due date for a student on one assignment.
+     *
+     * The due date reflects any user or group override, and an approved
+     * extension takes precedence over both.
+     *
+     * @param \assign $assign Assignment api instance, reusable across students.
+     * @param int $studentid
+     * @return \stdClass Object with submitted, duedate, extension and overdue.
+     */
+    public static function get_assignment_status(\assign $assign, int $studentid): \stdClass {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/assign/locallib.php');
+
+        $assign->update_effective_access($studentid);
+        $duedate = (int)$assign->get_instance($studentid)->duedate;
+
+        $extension = false;
+        $flags = $assign->get_user_flags($studentid, false);
+        if ($flags && $flags->extensionduedate > 0) {
+            $extension = true;
+            $duedate = (int)$flags->extensionduedate;
+        }
+
+        $submission = $assign->get_user_submission($studentid, false);
+        $submitted = $submission && $submission->status === ASSIGN_SUBMISSION_STATUS_SUBMITTED;
+
+        return (object)[
+            'submitted' => $submitted,
+            'duedate' => $duedate,
+            'extension' => $extension,
+            'overdue' => !$submitted && $duedate > 0 && $duedate < time(),
+        ];
+    }
+
+    /**
+     * Attempt status and effective close date for a student on one quiz.
+     *
+     * The close date reflects any user or group override; an override that
+     * changes the close date is reported as an extension.
+     *
+     * @param \stdClass $quiz Base quiz record (without user overrides applied), reusable across students.
+     * @param int $studentid
+     * @return \stdClass Object with submitted, duedate, extension and overdue.
+     */
+    public static function get_quiz_status(\stdClass $quiz, int $studentid): \stdClass {
+        global $CFG;
+        require_once($CFG->dirroot . '/mod/quiz/lib.php');
+
+        // The quiz record is cloned because quiz_update_effective_access() modifies it in place.
+        $effective = quiz_update_effective_access(clone $quiz, $studentid);
+        $duedate = (int)$effective->timeclose;
+        $extension = $duedate !== (int)$quiz->timeclose;
+
+        $submitted = false;
+        foreach (quiz_get_user_attempts([$quiz->id], $studentid) as $attempt) {
+            if ($attempt->state === \mod_quiz\quiz_attempt::FINISHED) {
+                $submitted = true;
+                break;
+            }
+        }
+
+        return (object)[
+            'submitted' => $submitted,
+            'duedate' => $duedate,
+            'extension' => $extension,
+            'overdue' => !$submitted && $duedate > 0 && $duedate < time(),
+        ];
+    }
+
+    /**
+     * Last course access times for a set of students.
+     *
+     * @param int[] $studentids
+     * @return array Two maps: 'percourse' keyed by "userid-courseid" and 'latest' keyed by userid.
+     */
+    public static function get_last_course_access(array $studentids): array {
+        global $DB;
+        $access = ['percourse' => [], 'latest' => []];
+        if (empty($studentids)) {
+            return $access;
+        }
+        [$insql, $params] = $DB->get_in_or_equal($studentids, SQL_PARAMS_NAMED);
+        $records = $DB->get_records_select(
+            'user_lastaccess',
+            "userid $insql",
+            $params,
+            '',
+            'id, userid, courseid, timeaccess'
+        );
+        foreach ($records as $record) {
+            $access['percourse'][$record->userid . '-' . $record->courseid] = (int)$record->timeaccess;
+            $access['latest'][$record->userid] = max($access['latest'][$record->userid] ?? 0, (int)$record->timeaccess);
+        }
+        return $access;
     }
 
     /**

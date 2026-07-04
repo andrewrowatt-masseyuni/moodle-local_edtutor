@@ -51,6 +51,7 @@ function xmldb_local_edtutor_install() {
         set_role_contextlevels($tutorroleid, [CONTEXT_SYSTEM]);
         assign_capability('local/edtutor:submit', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('local/edtutor:loginas', CAP_ALLOW, $tutorroleid, $systemcontext->id);
+        assign_capability('local/edtutor:setpreferences', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('mod/assign:editothersubmission', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         assign_capability('moodle/site:viewuseridentity', CAP_ALLOW, $tutorroleid, $systemcontext->id);
         // Required so core require_login() lets the tutor enter a student's

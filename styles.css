@@ -5,3 +5,38 @@
         font-size: 0.9em;
     }
 }
+
+.local_edtutor-dashboard .local_edtutor-card {
+    border-left: 4px solid #357a32;
+}
+
+.local_edtutor-dashboard .badge {
+    font-weight: 400;
+    border-radius: 0.25rem;
+    padding: .4em .6em;
+}
+
+.local_edtutor-dashboard .local_edtutor-card.local_edtutor-overdue {
+    position: relative;
+    overflow: hidden;
+    border-left-color: #ca3120;
+}
+
+.local_edtutor-dashboard .local_edtutor-card.local_edtutor-overdue::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1em;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(
+            45deg,
+            rgba(202, 49, 32, 0.25) 0,
+            rgba(202, 49, 32, 0.25) 6px,
+            transparent 6px,
+            transparent 12px
+        );
+    mask-image: linear-gradient(to right, #000, transparent);
+}

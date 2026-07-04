@@ -1,0 +1,72 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/dashboard_activity_status
+
+    Submission status badges for one activity and student on the
+    Education Tutor dashboard.
+
+    When the work is not submitted the effective due date is shown; if an
+    extension (or quiz override) is applied it is that date, marked with an
+    Extension tag.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * submitted - Whether the student has submitted.
+    * hasduedate - Whether a due date applies.
+    * duedate - Effective due date (extension, override or default), formatted.
+    * extension - Whether an extension is applied.
+    * overdue - Whether the activity is overdue for this student.
+
+    Example context (json):
+    {
+        "submitted": false,
+        "hasduedate": true,
+        "duedate": "Friday, 4 July 2025, 5:00 PM",
+        "extension": true,
+        "overdue": true
+    }
+}}
+{{#submitted}}
+    <span class="badge badge-success">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        {{#str}} submitted, local_edtutor {{/str}}
+    </span>
+{{/submitted}}
+{{^submitted}}
+    <span class="badge badge-secondary">{{#str}} notsubmitted, local_edtutor {{/str}}</span>
+    {{#hasduedate}}
+        <span class="small ml-1">{{#str}} dueon, local_edtutor, {{duedate}} {{/str}}</span>
+    {{/hasduedate}}
+    {{#extension}}
+        <span class="badge badge-info ml-1">
+            <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>
+            {{#str}} extension, local_edtutor {{/str}}
+        </span>
+    {{/extension}}
+    {{#overdue}}
+        <span class="badge badge-danger ml-1">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            {{#str}} overdue, local_edtutor {{/str}}
+        </span>
+    {{/overdue}}
+{{/submitted}}

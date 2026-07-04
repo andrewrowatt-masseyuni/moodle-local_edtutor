@@ -24,6 +24,7 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\core_userlist_provider;
 use core_privacy\local\request\plugin\provider as request_plugin_provider;
 use core_privacy\local\request\transform;
+use core_privacy\local\request\user_preference_provider;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
@@ -36,7 +37,7 @@ use core_privacy\local\request\writer;
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements core_userlist_provider, metadata_provider, request_plugin_provider {
+class provider implements core_userlist_provider, metadata_provider, request_plugin_provider, user_preference_provider {
     /**
      * Describe the personal data stored by this plugin.
      *
@@ -58,7 +59,29 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
 
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:local_edtutor_files');
 
+        $collection->add_user_preference(
+            'local_edtutor_dashboard_view',
+            'privacy:metadata:preference:local_edtutor_dashboard_view'
+        );
+
         return $collection;
+    }
+
+    /**
+     * Export the user preferences held by this plugin.
+     *
+     * @param int $userid
+     */
+    public static function export_user_preferences(int $userid): void {
+        $view = get_user_preferences('local_edtutor_dashboard_view', null, $userid);
+        if ($view !== null) {
+            writer::export_user_preference(
+                'local_edtutor',
+                'local_edtutor_dashboard_view',
+                $view,
+                get_string('privacy:metadata:preference:local_edtutor_dashboard_view', 'local_edtutor')
+            );
+        }
     }
 
     /**

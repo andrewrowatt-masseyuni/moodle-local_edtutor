@@ -1,0 +1,178 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/dashboard
+
+    Education Tutor dashboard with a by-student and a by-course view.
+
+    Both views are rendered; the toggle shows one at a time and the choice is
+    saved as a user preference by the local_edtutor/dashboard AMD module.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * data-region="local_edtutor-dashboard"
+    * data-action="local_edtutor-viewtoggle"
+    * data-region="local_edtutor-view-bystudent"
+    * data-region="local_edtutor-view-bycourse"
+
+    Context variables required for this template:
+    * bystudentactive - Whether the by-student view is shown initially.
+    * bycourseactive - Whether the by-course view is shown initially.
+    * canloginas - Whether login on behalf actions are shown.
+    * cansubmit - Whether submit on behalf actions are shown.
+    * cansetpreferences - Whether the set student preferences action is shown.
+    * preferencesurl - URL of the student preferences page.
+    * hasstudents - Whether any students are allocated to the tutor.
+    * students - Student cards, see local_edtutor/dashboard_student_card.
+    * hascourses - Whether any allocated student is enrolled in a course.
+    * courses - Course cards, see local_edtutor/dashboard_course_card.
+
+    Example context (json):
+    {
+        "bystudentactive": true,
+        "bycourseactive": false,
+        "canloginas": true,
+        "cansubmit": true,
+        "cansetpreferences": true,
+        "preferencesurl": "https://example.com/local/edtutor/preferences.php",
+        "hasstudents": true,
+        "students": [
+            {
+                "id": 3,
+                "fullname": "Student One",
+                "username": "27010001",
+                "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
+                "overdue": true,
+                "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
+                "hascourses": true,
+                "courses": [
+                    {
+                        "id": 5,
+                        "fullname": "Course 1",
+                        "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
+                        "hasactivities": true,
+                        "hasdueactivities": true,
+                        "activities": [
+                            {
+                                "cmid": 12,
+                                "name": "Assignment 1",
+                                "iconclass": "fa-solid fa-file-pen",
+                                "submittable": true,
+                                "submitted": false,
+                                "hasduedate": true,
+                                "duedate": "Friday, 4 July 2025, 5:00 PM",
+                                "extension": true,
+                                "overdue": true,
+                                "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
+                            }
+                        ],
+                        "hasnoduedate": true,
+                        "noduedateactivities": [
+                            {
+                                "cmid": 13,
+                                "name": "Quiz 1",
+                                "iconclass": "fa-solid fa-clipboard-question",
+                                "submittable": false,
+                                "submitted": false,
+                                "hasduedate": false,
+                                "duedate": "",
+                                "extension": false,
+                                "overdue": false,
+                                "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=13"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "hascourses": true,
+        "courses": [
+            {
+                "id": 5,
+                "fullname": "Course 1",
+                "overdue": true,
+                "hasactivities": true,
+                "hasdueactivities": true,
+                "activities": [
+                    {
+                        "cmid": 12,
+                        "name": "Assignment 1",
+                        "iconclass": "fa-solid fa-file-pen",
+                        "submittable": true,
+                        "students": [
+                            {
+                                "id": 3,
+                                "fullname": "Student One",
+                                "username": "27010001",
+                                "submitted": false,
+                                "hasduedate": true,
+                                "duedate": "Friday, 4 July 2025, 5:00 PM",
+                                "extension": true,
+                                "overdue": true,
+                                "submittable": true,
+                                "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
+                                "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
+                            }
+                        ]
+                    }
+                ],
+                "hasnoduedate": false,
+                "noduedateactivities": []
+            }
+        ]
+    }
+}}
+<div class="local_edtutor-dashboard" data-region="local_edtutor-dashboard">
+    <div class="btn-group btn-group-toggle mb-3" data-toggle="buttons" role="group"
+         aria-label="{{#str}} dashboardviewtoggle, local_edtutor {{/str}}">
+        <label class="btn btn-outline-secondary {{#bystudentactive}}active{{/bystudentactive}}">
+            <input type="radio" name="local_edtutor-view" value="bystudent"
+                   data-action="local_edtutor-viewtoggle" {{#bystudentactive}}checked{{/bystudentactive}}>
+            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+            {{#str}} bystudent, local_edtutor {{/str}}
+        </label>
+        <label class="btn btn-outline-secondary {{#bycourseactive}}active{{/bycourseactive}}">
+            <input type="radio" name="local_edtutor-view" value="bycourse"
+                   data-action="local_edtutor-viewtoggle" {{#bycourseactive}}checked{{/bycourseactive}}>
+            <i class="fa-solid fa-book" aria-hidden="true"></i>
+            {{#str}} bycourse, local_edtutor {{/str}}
+        </label>
+    </div>
+    <div data-region="local_edtutor-view-bystudent" class="{{^bystudentactive}}d-none{{/bystudentactive}}">
+        {{#students}}
+            {{> local_edtutor/dashboard_student_card }}
+        {{/students}}
+        {{^hasstudents}}
+            <div class="alert alert-info">{{#str}} nostudentsallocated, local_edtutor {{/str}}</div>
+        {{/hasstudents}}
+    </div>
+    <div data-region="local_edtutor-view-bycourse" class="{{^bycourseactive}}d-none{{/bycourseactive}}">
+        {{#courses}}
+            {{> local_edtutor/dashboard_course_card }}
+        {{/courses}}
+        {{^hascourses}}
+            <div class="alert alert-info">{{#str}} nocourseswithstudents, local_edtutor {{/str}}</div>
+        {{/hascourses}}
+    </div>
+</div>
+{{#js}}
+require(['local_edtutor/dashboard'], function(dashboard) {
+    dashboard.init();
+});
+{{/js}}
