@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'local_edtutor';
-$plugin->release      = '1.1.0';
-$plugin->version      = 2026070402;
+$plugin->release      = '1.2.0';
+$plugin->version      = 2026070601;
 $plugin->requires     = 2024100700;
 $plugin->supported    = [405, 405];
 $plugin->maturity     = MATURITY_BETA;

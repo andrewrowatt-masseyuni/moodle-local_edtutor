@@ -26,6 +26,11 @@ use local_edtutor\manager;
  * listed in due date order, with activities that have no due date grouped
  * below them.
  *
+ * Each activity row carries a timeframe classification and every row, section
+ * and card an initial hidden flag matching the active timeframe filter, so the
+ * first render is already filtered and the local_edtutor/dashboard AMD module
+ * can refilter client side without a reload.
+ *
  * @package    local_edtutor
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -36,6 +41,9 @@ class dashboard implements \core\output\named_templatable, \renderable {
 
     /** @var string Active view, 'bystudent' or 'bycourse'. */
     protected string $view;
+
+    /** @var string Active timeframe filter, 'all', 'duesoon' or 'overdue'. */
+    protected string $timeframe;
 
     /** @var bool Whether the tutor may log in as their allocated students. */
     protected bool $canloginas;
@@ -51,13 +59,22 @@ class dashboard implements \core\output\named_templatable, \renderable {
      *
      * @param int $tutorid Tutor user id.
      * @param string $view Active view, 'bystudent' or 'bycourse'.
+     * @param string $timeframe Active timeframe filter, 'all', 'duesoon' or 'overdue'.
      * @param bool $canloginas Whether the tutor may log in as their allocated students.
      * @param bool $cansubmit Whether the tutor may submit on behalf of their allocated students.
      * @param bool $cansetpreferences Whether the tutor may set preferences for their allocated students.
      */
-    public function __construct(int $tutorid, string $view, bool $canloginas, bool $cansubmit, bool $cansetpreferences) {
+    public function __construct(
+        int $tutorid,
+        string $view,
+        string $timeframe,
+        bool $canloginas,
+        bool $cansubmit,
+        bool $cansetpreferences
+    ) {
         $this->tutorid = $tutorid;
         $this->view = $view;
+        $this->timeframe = $timeframe;
         $this->canloginas = $canloginas;
         $this->cansubmit = $cansubmit;
         $this->cansetpreferences = $cansetpreferences;
@@ -86,10 +103,15 @@ class dashboard implements \core\output\named_templatable, \renderable {
         $students = manager::get_allocated_students($this->tutorid);
         $lastaccess = manager::get_last_course_access(array_keys($students));
 
+        $upcomingdays = (int)get_config('local_edtutor', 'upcomingdays') ?: 14;
+        $cutoff = time() + $upcomingdays * DAYSECS;
+
         $assigns = [];
         $quizzes = [];
         $studentcards = [];
         $pivot = [];
+        $filterstudents = [];
+        $allcourses = [];
 
         foreach ($students as $student) {
             $studentid = (int)$student->id;
@@ -134,6 +156,12 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         'cmid' => $cm->id,
                     ]))->out(false);
 
+                    $rowtimeframe = self::timeframe_for(
+                        $status->submitted,
+                        $status->overdue,
+                        (int)$status->duedate,
+                        $cutoff
+                    );
                     $statusdata = [
                         'submitted' => $status->submitted,
                         'hasduedate' => $status->duedate > 0,
@@ -142,6 +170,8 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         'overdue' => $status->overdue,
                         'submiturl' => $submiturl,
                         'submittable' => $isassign,
+                        'timeframe' => $rowtimeframe,
+                        'hidden' => !self::timeframe_visible($rowtimeframe, $this->timeframe),
                     ];
 
                     $activitiesdata[] = array_merge($statusdata, [
@@ -184,6 +214,10 @@ class dashboard implements \core\output\named_templatable, \renderable {
 
                 [$withdue, $nodue] = self::split_by_duedate($activitiesdata);
                 $courseaccess = $lastaccess['percourse'][$studentid . '-' . $courseid] ?? 0;
+                // A section with no activities at all only shows under the unfiltered timeframe;
+                // the JS filter pass in local_edtutor/dashboard uses the same rule.
+                $sectionvisible = self::count_visible($activitiesdata) > 0
+                    || ($this->timeframe === 'all' && empty($activitiesdata));
                 $coursesdata[] = [
                     'id' => $courseid,
                     'fullname' => $coursename,
@@ -194,10 +228,15 @@ class dashboard implements \core\output\named_templatable, \renderable {
                     'activities' => $withdue,
                     'hasnoduedate' => !empty($nodue),
                     'noduedateactivities' => $nodue,
+                    'noduehidden' => self::count_visible($nodue) === 0,
+                    'hidden' => !$sectionvisible,
                 ];
+                $allcourses[$courseid] = $coursename;
             }
 
             $latestaccess = $lastaccess['latest'][$studentid] ?? 0;
+            $cardvisible = self::count_visible($coursesdata) > 0
+                || ($this->timeframe === 'all' && empty($coursesdata));
             $studentcards[] = [
                 'id' => $studentid,
                 'fullname' => fullname($student),
@@ -207,6 +246,11 @@ class dashboard implements \core\output\named_templatable, \renderable {
                 'loginasurl' => $loginasurl,
                 'hascourses' => !empty($coursesdata),
                 'courses' => $coursesdata,
+                'hidden' => !$cardvisible,
+            ];
+            $filterstudents[] = [
+                'id' => $studentid,
+                'label' => fullname($student) . ' (' . $student->username . ')',
             ];
         }
 
@@ -216,15 +260,31 @@ class dashboard implements \core\output\named_templatable, \renderable {
         }, $pivot);
         \core_collator::asort($coursenames);
         $coursecards = [];
+        // An activity block is hidden when the timeframe filter hides all of its student rows,
+        // and a course card when all of its activity blocks are hidden.
+        $markhidden = function (array $activity): array {
+            $activity['hidden'] = self::count_visible($activity['students']) === 0;
+            return $activity;
+        };
         foreach (array_keys($coursenames) as $courseid) {
             $coursecard = $pivot[$courseid];
             [$withdue, $nodue] = self::split_by_duedate(array_values($coursecard['activities']));
+            $withdue = array_map($markhidden, $withdue);
+            $nodue = array_map($markhidden, $nodue);
             $coursecard['hasactivities'] = !empty($coursecard['activities']);
             $coursecard['hasdueactivities'] = !empty($withdue);
             $coursecard['activities'] = $withdue;
             $coursecard['hasnoduedate'] = !empty($nodue);
             $coursecard['noduedateactivities'] = $nodue;
+            $coursecard['noduehidden'] = self::count_visible($nodue) === 0;
+            $coursecard['hidden'] = self::count_visible(array_merge($withdue, $nodue)) === 0;
             $coursecards[] = $coursecard;
+        }
+
+        \core_collator::asort($allcourses);
+        $filtercourses = [];
+        foreach ($allcourses as $courseid => $coursefullname) {
+            $filtercourses[] = ['id' => $courseid, 'fullname' => $coursefullname];
         }
 
         return [
@@ -238,7 +298,68 @@ class dashboard implements \core\output\named_templatable, \renderable {
             'students' => $studentcards,
             'hascourses' => !empty($coursecards),
             'courses' => $coursecards,
+            'filterstudents' => $filterstudents,
+            'filtercourses' => $filtercourses,
+            'tfallselected' => $this->timeframe === 'all',
+            'tfduesoonselected' => $this->timeframe === 'duesoon',
+            'tfoverdueselected' => $this->timeframe === 'overdue',
+            'bystudentempty' => !empty($studentcards) && self::count_visible($studentcards) === 0,
+            'bycourseempty' => !empty($coursecards) && self::count_visible($coursecards) === 0,
         ];
+    }
+
+    /**
+     * Classify an activity row for the timeframe filter.
+     *
+     * @param bool $submitted Whether the student has submitted.
+     * @param bool $overdue Whether the activity is overdue for the student.
+     * @param int $duedate Effective due date timestamp, 0 when none.
+     * @param int $cutoff Latest due date timestamp that still counts as upcoming.
+     * @return string One of 'submitted', 'overdue', 'upcoming' or 'future'.
+     */
+    private static function timeframe_for(bool $submitted, bool $overdue, int $duedate, int $cutoff): string {
+        if ($submitted) {
+            return 'submitted';
+        }
+        if ($overdue) {
+            return 'overdue';
+        }
+        if ($duedate > 0 && $duedate <= $cutoff) {
+            return 'upcoming';
+        }
+        // Due more than the configured window away, or no due date at all.
+        return 'future';
+    }
+
+    /**
+     * Whether a row with the given classification is visible under a timeframe filter.
+     *
+     * Mirrors the client side rule in the local_edtutor/dashboard AMD module.
+     *
+     * @param string $rowtimeframe Row classification from timeframe_for().
+     * @param string $filter Active filter, 'all', 'duesoon' or 'overdue'.
+     * @return bool
+     */
+    private static function timeframe_visible(string $rowtimeframe, string $filter): bool {
+        if ($filter === 'all') {
+            return true;
+        }
+        if ($filter === 'overdue') {
+            return $rowtimeframe === 'overdue';
+        }
+        return $rowtimeframe === 'overdue' || $rowtimeframe === 'upcoming';
+    }
+
+    /**
+     * Count the rows that are not flagged hidden.
+     *
+     * @param array $rows Context arrays, each optionally carrying a hidden flag.
+     * @return int
+     */
+    private static function count_visible(array $rows): int {
+        return count(array_filter($rows, function (array $row): bool {
+            return empty($row['hidden']);
+        }));
     }
 
     /**

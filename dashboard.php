@@ -43,9 +43,15 @@ if (!in_array($view, ['bystudent', 'bycourse'], true)) {
     $view = 'bystudent';
 }
 
+$timeframe = get_user_preferences('local_edtutor_dashboard_timeframe', 'duesoon');
+if (!in_array($timeframe, ['all', 'duesoon', 'overdue'], true)) {
+    $timeframe = 'duesoon';
+}
+
 $dashboard = new \local_edtutor\output\dashboard(
     (int)$USER->id,
     $view,
+    $timeframe,
     has_capability('local/edtutor:loginas', $context),
     has_capability('local/edtutor:submit', $context),
     has_capability('local/edtutor:setpreferences', $context)
