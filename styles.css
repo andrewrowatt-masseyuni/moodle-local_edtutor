@@ -10,6 +10,22 @@
     border-left: 4px solid #357a32;
 }
 
+/* Must win over Bootstrap display utilities (d-flex etc.) on the same element,
+   like Bootstrap's own d-none does. */
+.local_edtutor-dashboard .local_edtutor-hidden {
+    display: none !important; /* stylelint-disable-line declaration-no-important */
+}
+
+/* Size the toolbar input-groups to their content instead of the full row. */
+.local_edtutor-dashboard .local_edtutor-filter.input-group {
+    width: auto;
+}
+
+.local_edtutor-dashboard .local_edtutor-filter .custom-select {
+    flex: 0 0 auto;
+    width: auto;
+}
+
 .local_edtutor-dashboard .badge {
     font-weight: 400;
     border-radius: 0.25rem;
@@ -39,4 +55,16 @@
             transparent 12px
         );
     mask-image: linear-gradient(to right, #000, transparent);
+}
+
+#local_edtutor-filterstudent {
+    max-width: 30ch;
+}
+
+#local_edtutor-filtercourse {
+    max-width: 20ch;
+}
+
+#local_edtutor-timeframe {
+    max-width: 30ch;
 }

@@ -64,6 +64,11 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
             'privacy:metadata:preference:local_edtutor_dashboard_view'
         );
 
+        $collection->add_user_preference(
+            'local_edtutor_dashboard_timeframe',
+            'privacy:metadata:preference:local_edtutor_dashboard_timeframe'
+        );
+
         return $collection;
     }
 
@@ -80,6 +85,16 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
                 'local_edtutor_dashboard_view',
                 $view,
                 get_string('privacy:metadata:preference:local_edtutor_dashboard_view', 'local_edtutor')
+            );
+        }
+
+        $timeframe = get_user_preferences('local_edtutor_dashboard_timeframe', null, $userid);
+        if ($timeframe !== null) {
+            writer::export_user_preference(
+                'local_edtutor',
+                'local_edtutor_dashboard_timeframe',
+                $timeframe,
+                get_string('privacy:metadata:preference:local_edtutor_dashboard_timeframe', 'local_edtutor')
             );
         }
     }

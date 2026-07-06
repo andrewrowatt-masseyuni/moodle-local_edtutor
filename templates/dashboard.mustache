@@ -19,17 +19,26 @@
 
     Education Tutor dashboard with a by-student and a by-course view.
 
-    Both views are rendered; the toggle shows one at a time and the choice is
-    saved as a user preference by the local_edtutor/dashboard AMD module.
+    Both views are rendered; the view select shows one at a time and the
+    choice is saved as a user preference by the local_edtutor/dashboard AMD
+    module. The same module filters both views client side from the student,
+    course and status (timeframe) selects. Only one of the student and course
+    filters is active at a time (the module resets the other), and the
+    timeframe's initial state is rendered server side and persisted as a user
+    preference.
 
     Classes required for JS:
-    * none
+    * local_edtutor-hidden - Marker class applied to filtered-out elements.
 
     Data attributes required for JS:
     * data-region="local_edtutor-dashboard"
     * data-action="local_edtutor-viewtoggle"
+    * data-action="local_edtutor-filterstudent"
+    * data-action="local_edtutor-filtercourse"
+    * data-action="local_edtutor-timeframe"
     * data-region="local_edtutor-view-bystudent"
     * data-region="local_edtutor-view-bycourse"
+    * data-region="local_edtutor-nomatches"
 
     Context variables required for this template:
     * bystudentactive - Whether the by-student view is shown initially.
@@ -42,6 +51,13 @@
     * students - Student cards, see local_edtutor/dashboard_student_card.
     * hascourses - Whether any allocated student is enrolled in a course.
     * courses - Course cards, see local_edtutor/dashboard_course_card.
+    * filterstudents - Student filter options with id and label.
+    * filtercourses - Course filter options with id and fullname.
+    * tfallselected - Whether the 'all' timeframe option is selected.
+    * tfduesoonselected - Whether the 'duesoon' timeframe option is selected.
+    * tfoverdueselected - Whether the 'overdue' timeframe option is selected.
+    * bystudentempty - Whether the timeframe filter hides every student card.
+    * bycourseempty - Whether the timeframe filter hides every course card.
 
     Example context (json):
     {
@@ -51,6 +67,23 @@
         "cansubmit": true,
         "cansetpreferences": true,
         "preferencesurl": "https://example.com/local/edtutor/preferences.php",
+        "filterstudents": [
+            {
+                "id": 3,
+                "label": "Student One (27010001)"
+            }
+        ],
+        "filtercourses": [
+            {
+                "id": 5,
+                "fullname": "Course 1"
+            }
+        ],
+        "tfallselected": false,
+        "tfduesoonselected": true,
+        "tfoverdueselected": false,
+        "bystudentempty": false,
+        "bycourseempty": false,
         "hasstudents": true,
         "students": [
             {
@@ -140,20 +173,62 @@
     }
 }}
 <div class="local_edtutor-dashboard" data-region="local_edtutor-dashboard">
-    <div class="btn-group btn-group-toggle mb-3" data-toggle="buttons" role="group"
-         aria-label="{{#str}} dashboardviewtoggle, local_edtutor {{/str}}">
-        <label class="btn btn-outline-secondary {{#bystudentactive}}active{{/bystudentactive}}">
-            <input type="radio" name="local_edtutor-view" value="bystudent"
-                   data-action="local_edtutor-viewtoggle" {{#bystudentactive}}checked{{/bystudentactive}}>
-            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
-            {{#str}} bystudent, local_edtutor {{/str}}
-        </label>
-        <label class="btn btn-outline-secondary {{#bycourseactive}}active{{/bycourseactive}}">
-            <input type="radio" name="local_edtutor-view" value="bycourse"
-                   data-action="local_edtutor-viewtoggle" {{#bycourseactive}}checked{{/bycourseactive}}>
-            <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
-            {{#str}} bycourse, local_edtutor {{/str}}
-        </label>
+    <div class="d-flex flex-wrap align-items-center mb-3">
+        <div class="input-group input-group-sm local_edtutor-filter mr-2 my-1">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="local_edtutor-view">{{#str}} view {{/str}}</label>
+            </div>
+            <select class="custom-select" id="local_edtutor-view" data-action="local_edtutor-viewtoggle">
+                <option value="bystudent" {{#bystudentactive}}selected{{/bystudentactive}}>
+                    {{#str}} bystudent, local_edtutor {{/str}}
+                </option>
+                <option value="bycourse" {{#bycourseactive}}selected{{/bycourseactive}}>
+                    {{#str}} bycourse, local_edtutor {{/str}}
+                </option>
+            </select>
+        </div>
+        <div class="input-group input-group-sm local_edtutor-filter mr-2 my-1">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="local_edtutor-filterstudent">
+                    {{#str}} student, local_edtutor {{/str}}
+                </label>
+            </div>
+            <select class="custom-select" id="local_edtutor-filterstudent" data-action="local_edtutor-filterstudent">
+                <option value="all" selected>{{#str}} filterallstudents, local_edtutor {{/str}}</option>
+                {{#filterstudents}}
+                    <option value="{{id}}">{{label}}</option>
+                {{/filterstudents}}
+            </select>
+        </div>
+        <div class="input-group input-group-sm local_edtutor-filter mr-2 my-1">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="local_edtutor-filtercourse">{{#str}} course {{/str}}</label>
+            </div>
+            <select class="custom-select" id="local_edtutor-filtercourse" data-action="local_edtutor-filtercourse">
+                <option value="all" selected>{{#str}} filterallcourses, local_edtutor {{/str}}</option>
+                {{#filtercourses}}
+                    <option value="{{id}}">{{fullname}}</option>
+                {{/filtercourses}}
+            </select>
+        </div>
+        <div class="input-group input-group-sm local_edtutor-filter my-1">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="local_edtutor-timeframe">
+                    {{#str}} status, local_edtutor {{/str}}
+                </label>
+            </div>
+            <select class="custom-select" id="local_edtutor-timeframe" data-action="local_edtutor-timeframe">
+                <option value="all" {{#tfallselected}}selected{{/tfallselected}}>
+                    {{#str}} timeframeall, local_edtutor {{/str}}
+                </option>
+                <option value="duesoon" {{#tfduesoonselected}}selected{{/tfduesoonselected}}>
+                    {{#str}} timeframeduesoon, local_edtutor {{/str}}
+                </option>
+                <option value="overdue" {{#tfoverdueselected}}selected{{/tfoverdueselected}}>
+                    {{#str}} timeframeoverdue, local_edtutor {{/str}}
+                </option>
+            </select>
+        </div>
     </div>
     <div data-region="local_edtutor-view-bystudent" class="{{^bystudentactive}}d-none{{/bystudentactive}}">
         {{#students}}
@@ -162,6 +237,12 @@
         {{^hasstudents}}
             <div class="alert alert-info">{{#str}} nostudentsallocated, local_edtutor {{/str}}</div>
         {{/hasstudents}}
+        {{#hasstudents}}
+            <div class="alert alert-info {{^bystudentempty}}local_edtutor-hidden{{/bystudentempty}}"
+                 data-region="local_edtutor-nomatches" aria-live="polite">
+                {{#str}} nomatchingitems, local_edtutor {{/str}}
+            </div>
+        {{/hasstudents}}
     </div>
     <div data-region="local_edtutor-view-bycourse" class="{{^bycourseactive}}d-none{{/bycourseactive}}">
         {{#courses}}
@@ -169,6 +250,12 @@
         {{/courses}}
         {{^hascourses}}
             <div class="alert alert-info">{{#str}} nocourseswithstudents, local_edtutor {{/str}}</div>
+        {{/hascourses}}
+        {{#hascourses}}
+            <div class="alert alert-info {{^bycourseempty}}local_edtutor-hidden{{/bycourseempty}}"
+                 data-region="local_edtutor-nomatches" aria-live="polite">
+                {{#str}} nomatchingitems, local_edtutor {{/str}}
+            </div>
         {{/hascourses}}
     </div>
 </div>

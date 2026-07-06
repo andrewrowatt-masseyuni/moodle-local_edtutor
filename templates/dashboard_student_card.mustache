@@ -26,10 +26,12 @@
     from the parent template context.
 
     Classes required for JS:
-    * none
+    * local_edtutor-hidden - Marker class applied to filtered-out elements.
 
     Data attributes required for JS:
-    * none
+    * data-region="local_edtutor-studentcard" with data-studentid
+    * data-region="local_edtutor-coursesection" with data-courseid
+    * data-region="local_edtutor-noduegroup"
 
     Context variables required for this template:
     * id - Student user id.
@@ -37,11 +39,13 @@
     * username - Student username (student ID).
     * lastaccess - Most recent course access, already formatted.
     * overdue - Whether any activity in any course is overdue.
+    * hidden - Whether the timeframe filter initially hides the whole card.
     * loginasurl - URL to log in as this student (includes sesskey). Each
       course also carries its own loginasurl with a courseid, so login-as
       from a course row lands in that course.
     * hascourses - Whether the student is enrolled in any course.
-    * courses - Courses with their activities and submission statuses.
+    * courses - Courses with their activities and submission statuses. Each
+      carries hidden and noduehidden flags for the initial filtered render.
 
     Example context (json):
     {
@@ -50,6 +54,7 @@
         "username": "27010001",
         "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
         "overdue": true,
+        "hidden": false,
         "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
         "hascourses": true,
         "courses": [
@@ -60,6 +65,8 @@
                 "lastaccess": "Tuesday, 1 July 2025, 9:00 AM",
                 "hasactivities": true,
                 "hasdueactivities": true,
+                "hidden": false,
+                "noduehidden": true,
                 "activities": [
                     {
                         "cmid": 12,
@@ -71,6 +78,8 @@
                         "duedate": "Friday, 4 July 2025, 5:00 PM",
                         "extension": true,
                         "overdue": true,
+                        "timeframe": "overdue",
+                        "hidden": false,
                         "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
                     }
                 ],
@@ -86,6 +95,8 @@
                         "duedate": "",
                         "extension": false,
                         "overdue": false,
+                        "timeframe": "future",
+                        "hidden": true,
                         "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=13"
                     }
                 ]
@@ -97,7 +108,7 @@
         "preferencesurl": "https://example.com/local/edtutor/preferences.php"
     }
 }}
-<div class="card mb-3 local_edtutor-card {{#overdue}}local_edtutor-overdue{{/overdue}}"
+<div class="card mb-3 local_edtutor-card {{#overdue}}local_edtutor-overdue{{/overdue}} {{#hidden}}local_edtutor-hidden{{/hidden}}"
      data-region="local_edtutor-studentcard" data-studentid="{{id}}">
     <div class="card-body">
         <div class="d-flex flex-wrap align-items-start">
@@ -119,7 +130,8 @@
             {{/cansetpreferences}}
         </div>
         {{#courses}}
-            <div class="border-top pt-2 mt-2">
+            <div class="border-top pt-2 mt-2 {{#hidden}}local_edtutor-hidden{{/hidden}}"
+                 data-region="local_edtutor-coursesection" data-courseid="{{id}}">
                 <div class="d-flex flex-wrap align-items-center">
                     <h6 class="mb-0 mr-2">
                         <i class="fa-solid fa-graduation-cap mr-1" aria-hidden="true"></i>{{fullname}}
@@ -142,11 +154,13 @@
                     </div>
                 {{/hasdueactivities}}
                 {{#hasnoduedate}}
-                    <h6 class="small text-muted mt-2 mb-0">{{#str}} noduedateheading, local_edtutor {{/str}}</h6>
-                    <div class="list-group list-group-flush ml-4">
-                        {{#noduedateactivities}}
-                            {{> local_edtutor/dashboard_activity_row }}
-                        {{/noduedateactivities}}
+                    <div data-region="local_edtutor-noduegroup" class="{{#noduehidden}}local_edtutor-hidden{{/noduehidden}}">
+                        <h6 class="small text-muted mt-2 mb-0">{{#str}} noduedateheading, local_edtutor {{/str}}</h6>
+                        <div class="list-group list-group-flush ml-4">
+                            {{#noduedateactivities}}
+                                {{> local_edtutor/dashboard_activity_row }}
+                            {{/noduedateactivities}}
+                        </div>
                     </div>
                 {{/hasnoduedate}}
                 {{^hasactivities}}

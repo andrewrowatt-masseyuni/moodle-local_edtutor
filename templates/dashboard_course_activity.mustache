@@ -25,17 +25,21 @@
     inherited from the parent template context.
 
     Classes required for JS:
-    * none
+    * local_edtutor-hidden - Marker class applied to filtered-out elements.
 
     Data attributes required for JS:
-    * none
+    * data-region="local_edtutor-courseactivity"
+    * data-region="local_edtutor-studentrow" with data-studentid and
+      data-timeframe
 
     Context variables required for this template:
     * cmid - Course module id.
     * name - Activity name.
     * iconclass - Font Awesome classes for the activity type icon.
     * submittable - Whether the activity supports submit on behalf.
-    * students - Students with status fields and action URLs.
+    * hidden - Whether the timeframe filter initially hides this activity.
+    * students - Students with status fields, timeframe classification,
+      initial hidden flag and action URLs.
 
     Example context (json):
     {
@@ -43,6 +47,7 @@
         "name": "Assignment 1",
         "iconclass": "fa-solid fa-file-pen",
         "submittable": true,
+        "hidden": false,
         "students": [
             {
                 "id": 3,
@@ -53,6 +58,8 @@
                 "duedate": "Friday, 4 July 2025, 5:00 PM",
                 "extension": true,
                 "overdue": true,
+                "timeframe": "overdue",
+                "hidden": false,
                 "submittable": true,
                 "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
                 "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
@@ -62,13 +69,14 @@
         "cansubmit": true
     }
 }}
-<div class="border-top pt-2 mt-2">
+<div class="border-top pt-2 mt-2 {{#hidden}}local_edtutor-hidden{{/hidden}}" data-region="local_edtutor-courseactivity">
     <h6 class="mb-1">
         <i class="{{iconclass}} mr-1" aria-hidden="true"></i>{{name}}
     </h6>
     <ul class="list-group list-group-flush ml-4">
         {{#students}}
-            <li class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center">
+            <li class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#hidden}}local_edtutor-hidden{{/hidden}}"
+                data-region="local_edtutor-studentrow" data-studentid="{{id}}" data-timeframe="{{timeframe}}">
                 <span class="mr-2">
                     <i class="fa-solid fa-user mr-1" aria-hidden="true"></i>{{fullname}}
                     <small class="text-muted">({{username}})</small>

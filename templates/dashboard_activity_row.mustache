@@ -24,10 +24,10 @@
     inherited from the parent template context.
 
     Classes required for JS:
-    * none
+    * local_edtutor-hidden - Marker class applied to filtered-out rows.
 
     Data attributes required for JS:
-    * none
+    * data-region="local_edtutor-activityrow" with data-timeframe
 
     Context variables required for this template:
     * cmid - Course module id.
@@ -39,6 +39,9 @@
     * duedate - Effective due date, formatted.
     * extension - Whether an extension is applied.
     * overdue - Whether the activity is overdue for this student.
+    * timeframe - Classification for the timeframe filter: submitted,
+      overdue, upcoming or future.
+    * hidden - Whether the timeframe filter initially hides this row.
     * submiturl - URL of the submit on behalf page for this activity.
 
     Example context (json):
@@ -52,11 +55,14 @@
         "duedate": "Friday, 4 July 2025, 5:00 PM",
         "extension": true,
         "overdue": true,
+        "timeframe": "overdue",
+        "hidden": false,
         "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12",
         "cansubmit": true
     }
 }}
-<div class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center">
+<div class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#hidden}}local_edtutor-hidden{{/hidden}}"
+     data-region="local_edtutor-activityrow" data-timeframe="{{timeframe}}">
     <span class="mr-2">
         <i class="{{iconclass}} mr-1" aria-hidden="true"></i>{{name}}
     </span>

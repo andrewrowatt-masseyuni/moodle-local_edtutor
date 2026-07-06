@@ -52,6 +52,14 @@ if ($hassiteconfig) {
         PARAM_ALPHANUMEXT
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'local_edtutor/upcomingdays',
+        get_string('settings:upcomingdays', 'local_edtutor'),
+        get_string('settings:upcomingdays_desc', 'local_edtutor'),
+        14,
+        PARAM_INT
+    ));
+
     // Admin menu links to the management pages (each page also enforces its own capability,
     // so managers and support staff can reach them directly by URL too).
     $ADMIN->add('localplugins', new admin_externalpage(

@@ -61,6 +61,13 @@ function local_edtutor_user_preferences(): array {
             'choices' => ['bystudent', 'bycourse'],
             'permissioncallback' => [core_user::class, 'is_current_user'],
         ],
+        'local_edtutor_dashboard_timeframe' => [
+            'type' => PARAM_ALPHA,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 'duesoon',
+            'choices' => ['all', 'duesoon', 'overdue'],
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
     ];
 }
 
