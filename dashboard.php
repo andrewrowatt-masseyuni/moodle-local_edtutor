@@ -44,7 +44,7 @@ if (!in_array($view, ['bystudent', 'bycourse'], true)) {
 }
 
 $timeframe = get_user_preferences('local_edtutor_dashboard_timeframe', 'duesoon');
-if (!in_array($timeframe, ['all', 'duesoon', 'overdue'], true)) {
+if (!in_array($timeframe, ['all', 'duesoon', 'overdue', 'hidden'], true)) {
     $timeframe = 'duesoon';
 }
 

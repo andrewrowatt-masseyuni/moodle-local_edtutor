@@ -27,9 +27,11 @@ use local_edtutor\manager;
  * below them.
  *
  * Each activity row carries a timeframe classification and every row, section
- * and card an initial hidden flag matching the active timeframe filter, so the
+ * and card an initial hidden flag matching the active status filter, so the
  * first render is already filtered and the local_edtutor/dashboard AMD module
- * can refilter client side without a reload.
+ * can refilter client side without a reload. A tutor may also hide individual
+ * assessments for a student; those rows are excluded from every filter except
+ * the "hidden" one, which shows only them.
  *
  * @package    local_edtutor
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
@@ -42,7 +44,7 @@ class dashboard implements \core\output\named_templatable, \renderable {
     /** @var string Active view, 'bystudent' or 'bycourse'. */
     protected string $view;
 
-    /** @var string Active timeframe filter, 'all', 'duesoon' or 'overdue'. */
+    /** @var string Active status filter, 'all', 'duesoon', 'overdue' or 'hidden'. */
     protected string $timeframe;
 
     /** @var bool Whether the tutor may log in as their allocated students. */
@@ -59,7 +61,7 @@ class dashboard implements \core\output\named_templatable, \renderable {
      *
      * @param int $tutorid Tutor user id.
      * @param string $view Active view, 'bystudent' or 'bycourse'.
-     * @param string $timeframe Active timeframe filter, 'all', 'duesoon' or 'overdue'.
+     * @param string $timeframe Active status filter, 'all', 'duesoon', 'overdue' or 'hidden'.
      * @param bool $canloginas Whether the tutor may log in as their allocated students.
      * @param bool $cansubmit Whether the tutor may submit on behalf of their allocated students.
      * @param bool $cansetpreferences Whether the tutor may set preferences for their allocated students.
@@ -102,6 +104,7 @@ class dashboard implements \core\output\named_templatable, \renderable {
 
         $students = manager::get_allocated_students($this->tutorid);
         $lastaccess = manager::get_last_course_access(array_keys($students));
+        $hiddenassessments = manager::get_hidden_assessments($this->tutorid);
 
         $upcomingdays = (int)get_config('local_edtutor', 'upcomingdays') ?: 14;
         $cutoff = time() + $upcomingdays * DAYSECS;
@@ -155,7 +158,23 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         'courseid' => $courseid,
                         'cmid' => $cm->id,
                     ]))->out(false);
+                    // The hide action leads to a confirmation page; the show action is
+                    // direct, so it carries a sesskey like the login-as links do.
+                    $hideurl = (new \moodle_url('/local/edtutor/hide.php', [
+                        'studentid' => $studentid,
+                        'courseid' => $courseid,
+                        'cmid' => $cm->id,
+                        'action' => 'hide',
+                    ]))->out(false);
+                    $showurl = (new \moodle_url('/local/edtutor/hide.php', [
+                        'studentid' => $studentid,
+                        'courseid' => $courseid,
+                        'cmid' => $cm->id,
+                        'action' => 'show',
+                        'sesskey' => sesskey(),
+                    ]))->out(false);
 
+                    $assesshidden = isset($hiddenassessments[$studentid . '-' . $cm->id]);
                     $rowtimeframe = self::timeframe_for(
                         $status->submitted,
                         $status->overdue,
@@ -171,7 +190,10 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         'submiturl' => $submiturl,
                         'submittable' => $isassign,
                         'timeframe' => $rowtimeframe,
-                        'hidden' => !self::timeframe_visible($rowtimeframe, $this->timeframe),
+                        'assesshidden' => $assesshidden,
+                        'hideurl' => $hideurl,
+                        'showurl' => $showurl,
+                        'hidden' => !self::row_visible($rowtimeframe, $assesshidden, $this->timeframe),
                     ];
 
                     $activitiesdata[] = array_merge($statusdata, [
@@ -303,6 +325,7 @@ class dashboard implements \core\output\named_templatable, \renderable {
             'tfallselected' => $this->timeframe === 'all',
             'tfduesoonselected' => $this->timeframe === 'duesoon',
             'tfoverdueselected' => $this->timeframe === 'overdue',
+            'tfhiddenselected' => $this->timeframe === 'hidden',
             'bystudentempty' => !empty($studentcards) && self::count_visible($studentcards) === 0,
             'bycourseempty' => !empty($coursecards) && self::count_visible($coursecards) === 0,
         ];
@@ -329,6 +352,28 @@ class dashboard implements \core\output\named_templatable, \renderable {
         }
         // Due more than the configured window away, or no due date at all.
         return 'future';
+    }
+
+    /**
+     * Whether a row is visible under the active status filter.
+     *
+     * Assessments the tutor has hidden are shown only under the 'hidden'
+     * filter and excluded from every other filter. Mirrors the client side
+     * rule in the local_edtutor/dashboard AMD module.
+     *
+     * @param string $rowtimeframe Row classification from timeframe_for().
+     * @param bool $assesshidden Whether the tutor has hidden this assessment.
+     * @param string $filter Active filter, 'all', 'duesoon', 'overdue' or 'hidden'.
+     * @return bool
+     */
+    private static function row_visible(string $rowtimeframe, bool $assesshidden, string $filter): bool {
+        if ($filter === 'hidden') {
+            return $assesshidden;
+        }
+        if ($assesshidden) {
+            return false;
+        }
+        return self::timeframe_visible($rowtimeframe, $filter);
     }
 
     /**

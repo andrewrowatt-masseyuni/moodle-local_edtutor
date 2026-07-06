@@ -17,10 +17,11 @@
  * Education Tutor dashboard view toggle and filters.
  *
  * Switches between the by-student and by-course views, filters both views by
- * one student or course (selecting one resets the other) and by timeframe,
- * and persists the view and timeframe choices as user preferences. Rows carry
- * a server-computed data-timeframe classification, so no date arithmetic
- * happens client side.
+ * one student or course (selecting one resets the other) and by status, and
+ * persists the view and status choices as user preferences. Rows carry a
+ * server-computed data-timeframe classification and a data-assesshidden flag,
+ * so no date arithmetic happens client side. Assessments the tutor has hidden
+ * are shown only under the "hidden" status filter.
  *
  * @module     local_edtutor/dashboard
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
@@ -88,6 +89,28 @@ const timeframeMatches = (rowTimeframe, filter) => {
 };
 
 /**
+ * Whether a row is visible under the active status filter.
+ *
+ * Assessments the tutor has hidden are shown only under the 'hidden' filter
+ * and excluded from every other filter. Mirrors row_visible() in
+ * \local_edtutor\output\dashboard.
+ *
+ * @param {HTMLElement} row An activity or student row.
+ * @param {string} filter One of all, duesoon, overdue or hidden.
+ * @returns {boolean}
+ */
+const rowMatches = (row, filter) => {
+    const assessHidden = row.dataset.assesshidden === '1';
+    if (filter === 'hidden') {
+        return assessHidden;
+    }
+    if (assessHidden) {
+        return false;
+    }
+    return timeframeMatches(row.dataset.timeframe, filter);
+};
+
+/**
  * Toggle the hidden marker class, reporting the resulting visibility.
  *
  * @param {HTMLElement} element
@@ -134,7 +157,7 @@ const filterByStudentView = (view, identity, timeframe) => {
                     const rows = section.querySelectorAll(Selectors.activityrow);
                     let visibleRows = 0;
                     rows.forEach(row => {
-                        if (setVisible(row, timeframeMatches(row.dataset.timeframe, timeframe))) {
+                        if (setVisible(row, rowMatches(row, timeframe))) {
                             visibleRows++;
                         }
                     });
@@ -175,7 +198,7 @@ const filterByCourseView = (view, identity, timeframe) => {
                 let visibleRows = 0;
                 block.querySelectorAll(Selectors.studentrow).forEach(row => {
                     const show = (!identity.studentid || row.dataset.studentid === identity.studentid)
-                        && timeframeMatches(row.dataset.timeframe, timeframe);
+                        && rowMatches(row, timeframe);
                     if (setVisible(row, show)) {
                         visibleRows++;
                     }

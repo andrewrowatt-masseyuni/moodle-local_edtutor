@@ -57,6 +57,11 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
             'completedby' => 'privacy:metadata:local_edtutor_submission:completedby',
         ], 'privacy:metadata:local_edtutor_submission');
 
+        $collection->add_database_table('local_edtutor_hidden', [
+            'tutorid' => 'privacy:metadata:local_edtutor_hidden:tutorid',
+            'studentid' => 'privacy:metadata:local_edtutor_hidden:studentid',
+        ], 'privacy:metadata:local_edtutor_hidden');
+
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:local_edtutor_files');
 
         $collection->add_user_preference(
@@ -118,6 +123,11 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
                 'local_edtutor_submission',
                 'tutorid = :t2 OR studentid = :s2 OR completedby = :c',
                 ['t2' => $userid, 's2' => $userid, 'c' => $userid]
+            )
+            || $DB->record_exists_select(
+                'local_edtutor_hidden',
+                'tutorid = :t3 OR studentid = :s3',
+                ['t3' => $userid, 's3' => $userid]
             );
 
         if ($hasdata) {
@@ -148,6 +158,8 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
             'SELECT completedby FROM {local_edtutor_submission} WHERE completedby > 0',
             []
         );
+        $userlist->add_from_sql('tutorid', 'SELECT tutorid FROM {local_edtutor_hidden}', []);
+        $userlist->add_from_sql('studentid', 'SELECT studentid FROM {local_edtutor_hidden}', []);
     }
 
     /**
@@ -176,6 +188,26 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
                 writer::with_context($context)->export_data(
                     [get_string('pluginname', 'local_edtutor'), get_string('allocations', 'local_edtutor')],
                     (object)['allocations' => $data]
+                );
+            }
+
+            $hidden = $DB->get_records_select(
+                'local_edtutor_hidden',
+                'tutorid = :t OR studentid = :s',
+                ['t' => $user->id, 's' => $user->id]
+            );
+            if ($hidden) {
+                $data = array_map(function ($h) {
+                    return [
+                        'tutorid' => $h->tutorid,
+                        'studentid' => $h->studentid,
+                        'courseid' => $h->courseid,
+                        'cmid' => $h->cmid,
+                    ];
+                }, array_values($hidden));
+                writer::with_context($context)->export_data(
+                    [get_string('pluginname', 'local_edtutor'), get_string('hideassessment', 'local_edtutor')],
+                    (object)['hiddenassessments' => $data]
                 );
             }
 
@@ -222,6 +254,7 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
         get_file_storage()->delete_area_files($context->id, 'local_edtutor', 'submission');
         $DB->delete_records('local_edtutor_allocation');
         $DB->delete_records('local_edtutor_submission');
+        $DB->delete_records('local_edtutor_hidden');
     }
 
     /**
@@ -272,6 +305,12 @@ class provider implements core_userlist_provider, metadata_provider, request_plu
 
         $DB->delete_records_select(
             'local_edtutor_allocation',
+            "tutorid $insql OR studentid $insql2",
+            array_merge($params, $params2)
+        );
+
+        $DB->delete_records_select(
+            'local_edtutor_hidden',
             "tutorid $insql OR studentid $insql2",
             array_merge($params, $params2)
         );

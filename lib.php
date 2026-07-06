@@ -65,7 +65,7 @@ function local_edtutor_user_preferences(): array {
             'type' => PARAM_ALPHA,
             'null' => NULL_NOT_ALLOWED,
             'default' => 'duesoon',
-            'choices' => ['all', 'duesoon', 'overdue'],
+            'choices' => ['all', 'duesoon', 'overdue', 'hidden'],
             'permissioncallback' => [core_user::class, 'is_current_user'],
         ],
     ];

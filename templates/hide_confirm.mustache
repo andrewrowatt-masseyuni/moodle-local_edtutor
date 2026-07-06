@@ -1,0 +1,70 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_edtutor/hide_confirm
+
+    Confirmation and warning page for hiding an assessment on the Education
+    Tutor dashboard. The Confirm control posts back to hide.php with a sesskey
+    and is styled with the Bootstrap danger class.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * message - The confirmation question, already escaped.
+    * warning - Explanatory warning text, already escaped.
+    * actionurl - Post target that performs the hide (hide.php).
+    * studentid - Student user id the assessment is hidden for.
+    * courseid - Course id of the assessment.
+    * cmid - Course module id of the assessment.
+    * sesskey - Session key for the post request.
+    * cancelurl - URL to return to the dashboard without hiding.
+
+    Example context (json):
+    {
+        "message": "Are you sure you want to hide \"Assignment 1\" in Course 1 for Student One (27010001)?",
+        "warning": "Hidden assessments no longer appear on your dashboard for this student.",
+        "actionurl": "https://example.com/local/edtutor/hide.php",
+        "studentid": 3,
+        "courseid": 5,
+        "cmid": 12,
+        "sesskey": "xyz",
+        "cancelurl": "https://example.com/local/edtutor/dashboard.php"
+    }
+}}
+<div class="alert alert-warning" role="alert">
+    <p class="mb-2">
+        <i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>{{message}}
+    </p>
+    <p class="mb-0">{{warning}}</p>
+</div>
+<form action="{{actionurl}}" method="post">
+    <input type="hidden" name="studentid" value="{{studentid}}">
+    <input type="hidden" name="courseid" value="{{courseid}}">
+    <input type="hidden" name="cmid" value="{{cmid}}">
+    <input type="hidden" name="action" value="hide">
+    <input type="hidden" name="confirm" value="1">
+    <input type="hidden" name="sesskey" value="{{sesskey}}">
+    <button type="submit" class="btn btn-danger">
+        <i class="fa-solid fa-eye-slash mr-1" aria-hidden="true"></i>
+        {{#str}} confirm {{/str}}
+    </button>
+    <a class="btn btn-secondary" href="{{cancelurl}}">{{#str}} cancel {{/str}}</a>
+</form>

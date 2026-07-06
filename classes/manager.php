@@ -42,6 +42,66 @@ class manager {
     }
 
     /**
+     * Assessments a tutor has hidden, as a set keyed by "studentid-cmid".
+     *
+     * @param int $tutorid
+     * @return array Map of "studentid-cmid" => true for each hidden assessment.
+     */
+    public static function get_hidden_assessments(int $tutorid): array {
+        global $DB;
+        $records = $DB->get_records('local_edtutor_hidden', ['tutorid' => $tutorid], '', 'id, studentid, cmid');
+        $map = [];
+        foreach ($records as $record) {
+            $map[$record->studentid . '-' . $record->cmid] = true;
+        }
+        return $map;
+    }
+
+    /**
+     * Hide or show one assessment for a student on the tutor's dashboard.
+     *
+     * Hiding is idempotent: a repeated hide keeps the single existing record,
+     * and showing an assessment that is not hidden is a no-op.
+     *
+     * @param int $tutorid
+     * @param int $studentid
+     * @param int $courseid
+     * @param int $cmid
+     * @param bool $hidden True to hide the assessment, false to show it again.
+     */
+    public static function set_assessment_hidden(
+        int $tutorid,
+        int $studentid,
+        int $courseid,
+        int $cmid,
+        bool $hidden
+    ): void {
+        global $DB;
+        $existing = $DB->get_record('local_edtutor_hidden', [
+            'tutorid' => $tutorid,
+            'studentid' => $studentid,
+            'cmid' => $cmid,
+        ]);
+        if ($hidden) {
+            if ($existing) {
+                return;
+            }
+            $now = time();
+            $DB->insert_record('local_edtutor_hidden', (object)[
+                'tutorid' => $tutorid,
+                'studentid' => $studentid,
+                'courseid' => $courseid,
+                'cmid' => $cmid,
+                'usermodified' => $tutorid,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ]);
+        } else if ($existing) {
+            $DB->delete_records('local_edtutor_hidden', ['id' => $existing->id]);
+        }
+    }
+
+    /**
      * Forum email digest type options, keyed by the user.maildigest value.
      *
      * The keys and labels match the user's own forum preferences page.

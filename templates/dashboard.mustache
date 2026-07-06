@@ -56,8 +56,9 @@
     * tfallselected - Whether the 'all' timeframe option is selected.
     * tfduesoonselected - Whether the 'duesoon' timeframe option is selected.
     * tfoverdueselected - Whether the 'overdue' timeframe option is selected.
-    * bystudentempty - Whether the timeframe filter hides every student card.
-    * bycourseempty - Whether the timeframe filter hides every course card.
+    * tfhiddenselected - Whether the 'hidden' (show only hidden) option is selected.
+    * bystudentempty - Whether the status filter hides every student card.
+    * bycourseempty - Whether the status filter hides every course card.
 
     Example context (json):
     {
@@ -82,6 +83,7 @@
         "tfallselected": false,
         "tfduesoonselected": true,
         "tfoverdueselected": false,
+        "tfhiddenselected": false,
         "bystudentempty": false,
         "bycourseempty": false,
         "hasstudents": true,
@@ -226,6 +228,9 @@
                 </option>
                 <option value="overdue" {{#tfoverdueselected}}selected{{/tfoverdueselected}}>
                     {{#str}} timeframeoverdue, local_edtutor {{/str}}
+                </option>
+                <option value="hidden" {{#tfhiddenselected}}selected{{/tfhiddenselected}}>
+                    {{#str}} timeframehidden, local_edtutor {{/str}}
                 </option>
             </select>
         </div>

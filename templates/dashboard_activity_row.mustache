@@ -27,7 +27,8 @@
     * local_edtutor-hidden - Marker class applied to filtered-out rows.
 
     Data attributes required for JS:
-    * data-region="local_edtutor-activityrow" with data-timeframe
+    * data-region="local_edtutor-activityrow" with data-timeframe and
+      data-assesshidden
 
     Context variables required for this template:
     * cmid - Course module id.
@@ -41,8 +42,11 @@
     * overdue - Whether the activity is overdue for this student.
     * timeframe - Classification for the timeframe filter: submitted,
       overdue, upcoming or future.
-    * hidden - Whether the timeframe filter initially hides this row.
+    * assesshidden - Whether the tutor has hidden this assessment.
+    * hidden - Whether the status filter initially hides this row.
     * submiturl - URL of the submit on behalf page for this activity.
+    * hideurl - URL of the hide confirmation page for this assessment.
+    * showurl - URL that shows this assessment again (includes sesskey).
 
     Example context (json):
     {
@@ -56,34 +60,41 @@
         "extension": true,
         "overdue": true,
         "timeframe": "overdue",
+        "assesshidden": false,
         "hidden": false,
         "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12",
+        "hideurl": "https://example.com/local/edtutor/hide.php?studentid=3&courseid=5&cmid=12&action=hide",
+        "showurl": "https://example.com/local/edtutor/hide.php?studentid=3&courseid=5&cmid=12&action=show&sesskey=xyz",
         "cansubmit": true
     }
 }}
 <div class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#hidden}}local_edtutor-hidden{{/hidden}}"
-     data-region="local_edtutor-activityrow" data-timeframe="{{timeframe}}">
+     data-region="local_edtutor-activityrow" data-timeframe="{{timeframe}}"
+     data-assesshidden="{{#assesshidden}}1{{/assesshidden}}{{^assesshidden}}0{{/assesshidden}}">
     <span class="mr-2">
         <i class="{{iconclass}} mr-1" aria-hidden="true"></i>{{name}}
     </span>
     {{> local_edtutor/dashboard_activity_status }}
-    {{^submitted}}
-        {{#cansubmit}}
-            {{#submittable}}
-                <a class="btn btn-outline-primary btn-sm ml-auto" href="{{submiturl}}">
-                    <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
-                    {{#str}} submitas, local_edtutor {{/str}}
-                </a>
-            {{/submittable}}
-            {{^submittable}}
-                <span class="ml-auto d-inline-block" tabindex="0"
-                      title="{{#str}} cannotsubmitonbehalf, local_edtutor {{/str}}">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+    <span class="ml-auto text-nowrap">
+        {{> local_edtutor/dashboard_hide_toggle }}
+        {{^submitted}}
+            {{#cansubmit}}
+                {{#submittable}}
+                    <a class="btn btn-outline-primary btn-sm" href="{{submiturl}}">
                         <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
                         {{#str}} submitas, local_edtutor {{/str}}
-                    </button>
-                </span>
-            {{/submittable}}
-        {{/cansubmit}}
-    {{/submitted}}
+                    </a>
+                {{/submittable}}
+                {{^submittable}}
+                    <span class="d-inline-block" tabindex="0"
+                          title="{{#str}} cannotsubmitonbehalf, local_edtutor {{/str}}">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+                            <i class="fa-solid fa-file-arrow-up mr-1" aria-hidden="true"></i>
+                            {{#str}} submitas, local_edtutor {{/str}}
+                        </button>
+                    </span>
+                {{/submittable}}
+            {{/cansubmit}}
+        {{/submitted}}
+    </span>
 </div>

@@ -29,17 +29,17 @@
 
     Data attributes required for JS:
     * data-region="local_edtutor-courseactivity"
-    * data-region="local_edtutor-studentrow" with data-studentid and
-      data-timeframe
+    * data-region="local_edtutor-studentrow" with data-studentid,
+      data-timeframe and data-assesshidden
 
     Context variables required for this template:
     * cmid - Course module id.
     * name - Activity name.
     * iconclass - Font Awesome classes for the activity type icon.
     * submittable - Whether the activity supports submit on behalf.
-    * hidden - Whether the timeframe filter initially hides this activity.
+    * hidden - Whether the status filter initially hides this activity.
     * students - Students with status fields, timeframe classification,
-      initial hidden flag and action URLs.
+      initial hidden flag, hide/show URLs and action URLs.
 
     Example context (json):
     {
@@ -59,10 +59,13 @@
                 "extension": true,
                 "overdue": true,
                 "timeframe": "overdue",
+                "assesshidden": false,
                 "hidden": false,
                 "submittable": true,
                 "loginasurl": "https://example.com/local/edtutor/loginas.php?userid=3&sesskey=xyz",
-                "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12"
+                "submiturl": "https://example.com/local/edtutor/submit.php?studentid=3&courseid=5&cmid=12",
+                "hideurl": "https://example.com/local/edtutor/hide.php?studentid=3&courseid=5&cmid=12&action=hide",
+                "showurl": "https://example.com/local/edtutor/hide.php?studentid=3&courseid=5&cmid=12&action=show&sesskey=xyz"
             }
         ],
         "canloginas": true,
@@ -76,13 +79,15 @@
     <ul class="list-group list-group-flush ml-4">
         {{#students}}
             <li class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#hidden}}local_edtutor-hidden{{/hidden}}"
-                data-region="local_edtutor-studentrow" data-studentid="{{id}}" data-timeframe="{{timeframe}}">
+                data-region="local_edtutor-studentrow" data-studentid="{{id}}" data-timeframe="{{timeframe}}"
+                data-assesshidden="{{#assesshidden}}1{{/assesshidden}}{{^assesshidden}}0{{/assesshidden}}">
                 <span class="mr-2">
                     <i class="fa-solid fa-user mr-1" aria-hidden="true"></i>{{fullname}}
                     <small class="text-muted">({{username}})</small>
                 </span>
                 {{> local_edtutor/dashboard_activity_status }}
                 <span class="ml-auto text-nowrap">
+                    {{> local_edtutor/dashboard_hide_toggle }}
                     {{^submitted}}
                         {{#cansubmit}}
                             {{#submittable}}
