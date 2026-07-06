@@ -45,7 +45,6 @@ Feature: Education Tutors have a dashboard of their allocated students
     And "[data-region='local_edtutor-view-bycourse'].d-none" "css_element" should exist
     When I set the field "View" to "By course"
     Then I should see "Course 1" in the "[data-region='local_edtutor-view-bycourse']" "css_element"
-    And "[data-region='local_edtutor-coursecard'].local_edtutor-overdue" "css_element" should exist
     And "[data-region='local_edtutor-view-bystudent'].d-none" "css_element" should exist
     And I reload the page
     And "[data-region='local_edtutor-view-bystudent'].d-none" "css_element" should exist

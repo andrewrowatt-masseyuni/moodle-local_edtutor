@@ -32,13 +32,18 @@
     padding: .4em .6em;
 }
 
-.local_edtutor-dashboard .local_edtutor-card.local_edtutor-overdue {
+/* The red trim is shown only while an overdue item is actually visible: an
+   overdue row the timeframe filter has not hidden, inside a course section or
+   activity block the identity filter has not hidden. :has() re-evaluates as the
+   local_edtutor/dashboard module toggles local_edtutor-hidden, so the trim
+   follows the filters without a page reload. */
+.local_edtutor-card:has(.local_edtutor-block:not(.local_edtutor-hidden) .local_edtutor-overdue:not(.local_edtutor-hidden)) {
     position: relative;
     overflow: hidden;
     border-left-color: #ca3120;
 }
 
-.local_edtutor-dashboard .local_edtutor-card.local_edtutor-overdue::before {
+.local_edtutor-card:has(.local_edtutor-block:not(.local_edtutor-hidden) .local_edtutor-overdue:not(.local_edtutor-hidden))::before {
     content: "";
     position: absolute;
     top: 0;

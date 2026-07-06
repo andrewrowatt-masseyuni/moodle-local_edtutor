@@ -27,6 +27,12 @@
     Classes required for JS:
     * local_edtutor-hidden - Marker class applied to filtered-out elements.
 
+    Classes required for CSS:
+    * local_edtutor-block - Wraps the activity's student rows; the card's red
+      trim ignores overdue rows inside a hidden block (see styles.css).
+    * local_edtutor-overdue - Marks an overdue student row; the card's red trim
+      is shown only while such a row is visible.
+
     Data attributes required for JS:
     * data-region="local_edtutor-courseactivity"
     * data-region="local_edtutor-studentrow" with data-studentid,
@@ -72,13 +78,13 @@
         "cansubmit": true
     }
 }}
-<div class="border-top pt-2 mt-2 {{#hidden}}local_edtutor-hidden{{/hidden}}" data-region="local_edtutor-courseactivity">
+<div class="border-top pt-2 mt-2 local_edtutor-block {{#hidden}}local_edtutor-hidden{{/hidden}}" data-region="local_edtutor-courseactivity">
     <h6 class="mb-1">
         <i class="{{iconclass}} mr-1" aria-hidden="true"></i>{{name}}
     </h6>
     <ul class="list-group list-group-flush ml-4">
         {{#students}}
-            <li class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#hidden}}local_edtutor-hidden{{/hidden}}"
+            <li class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#overdue}}local_edtutor-overdue{{/overdue}} {{#hidden}}local_edtutor-hidden{{/hidden}}"
                 data-region="local_edtutor-studentrow" data-studentid="{{id}}" data-timeframe="{{timeframe}}"
                 data-assesshidden="{{#assesshidden}}1{{/assesshidden}}{{^assesshidden}}0{{/assesshidden}}">
                 <span class="mr-2">

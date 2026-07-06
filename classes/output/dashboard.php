@@ -123,7 +123,6 @@ class dashboard implements \core\output\named_templatable, \renderable {
                 ['userid' => $studentid, 'sesskey' => sesskey()]
             ))->out(false);
 
-            $studentoverdue = false;
             $coursesdata = [];
             foreach (manager::get_student_courses($studentid) as $course) {
                 $courseid = (int)$course->id;
@@ -151,7 +150,6 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         }
                         $status = manager::get_quiz_status($quizzes[$cm->id], $studentid);
                     }
-                    $studentoverdue = $studentoverdue || $status->overdue;
 
                     $submiturl = (new \moodle_url('/local/edtutor/submit.php', [
                         'studentid' => $studentid,
@@ -207,7 +205,6 @@ class dashboard implements \core\output\named_templatable, \renderable {
                         $pivot[$courseid] = [
                             'id' => $courseid,
                             'fullname' => $coursename,
-                            'overdue' => false,
                             'activities' => [],
                         ];
                     }
@@ -225,7 +222,6 @@ class dashboard implements \core\output\named_templatable, \renderable {
                             'students' => [],
                         ];
                     }
-                    $pivot[$courseid]['overdue'] = $pivot[$courseid]['overdue'] || $status->overdue;
                     $pivot[$courseid]['activities'][$cm->id]['students'][] = array_merge($statusdata, [
                         'id' => $studentid,
                         'fullname' => fullname($student),
@@ -264,7 +260,6 @@ class dashboard implements \core\output\named_templatable, \renderable {
                 'fullname' => fullname($student),
                 'username' => $student->username,
                 'lastaccess' => $latestaccess ? userdate($latestaccess) : get_string('never'),
-                'overdue' => $studentoverdue,
                 'loginasurl' => $loginasurl,
                 'hascourses' => !empty($coursesdata),
                 'courses' => $coursesdata,

@@ -22,8 +22,9 @@
     Lists the assignments and quizzes in the course in due date order, with
     activities that have no due date grouped below. Under each activity are
     the tutor's allocated students with their submission status and actions.
-    A card is emphasised with a red left edge when any student's activity is
-    overdue. The capability flags are inherited from the parent template
+    A red left edge (styled in styles.css) emphasises the card only while it
+    shows an overdue student row, so it clears when the filter hides every
+    overdue row. The capability flags are inherited from the parent template
     context.
 
     Classes required for JS:
@@ -36,7 +37,6 @@
     Context variables required for this template:
     * id - Course id.
     * fullname - Course full name.
-    * overdue - Whether any activity is overdue for any allocated student.
     * hidden - Whether the timeframe filter initially hides the whole card.
     * hasactivities - Whether the course has any accessible activities.
     * hasdueactivities - Whether any activity has a due date.
@@ -49,7 +49,6 @@
     {
         "id": 5,
         "fullname": "Course 1",
-        "overdue": true,
         "hidden": false,
         "hasactivities": true,
         "hasdueactivities": true,
@@ -117,7 +116,7 @@
         "cansubmit": true
     }
 }}
-<div class="card mb-3 local_edtutor-card {{#overdue}}local_edtutor-overdue{{/overdue}} {{#hidden}}local_edtutor-hidden{{/hidden}}"
+<div class="card mb-3 local_edtutor-card {{#hidden}}local_edtutor-hidden{{/hidden}}"
      data-region="local_edtutor-coursecard" data-courseid="{{id}}">
     <div class="card-body">
         <h5 class="card-title mb-1">

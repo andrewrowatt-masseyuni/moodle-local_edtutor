@@ -26,6 +26,10 @@
     Classes required for JS:
     * local_edtutor-hidden - Marker class applied to filtered-out rows.
 
+    Classes required for CSS:
+    * local_edtutor-overdue - Marks an overdue row; the card's red trim is shown
+      only while such a row is visible (see styles.css).
+
     Data attributes required for JS:
     * data-region="local_edtutor-activityrow" with data-timeframe and
       data-assesshidden
@@ -68,7 +72,7 @@
         "cansubmit": true
     }
 }}
-<div class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#hidden}}local_edtutor-hidden{{/hidden}}"
+<div class="list-group-item px-0 py-2 d-flex flex-wrap align-items-center {{#overdue}}local_edtutor-overdue{{/overdue}} {{#hidden}}local_edtutor-hidden{{/hidden}}"
      data-region="local_edtutor-activityrow" data-timeframe="{{timeframe}}"
      data-assesshidden="{{#assesshidden}}1{{/assesshidden}}{{^assesshidden}}0{{/assesshidden}}">
     <span class="mr-2">
