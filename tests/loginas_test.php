@@ -54,9 +54,12 @@ final class loginas_test extends \advanced_testcase {
     }
 
     /**
-     * A tutor switches directly from one student to another without logging out.
+     * A tutor already in a login-as session cannot switch to another student.
+     *
+     * For security reasons the only way out of a login-as session is a full
+     * logout followed by re-authentication.
      */
-    public function test_switch_between_students(): void {
+    public function test_loginas_while_loggedinas_throws(): void {
         global $USER;
         $this->resetAfterTest();
 
@@ -68,29 +71,33 @@ final class loginas_test extends \advanced_testcase {
         $this->assertEquals($studenta->id, $USER->id);
 
         $sink = $this->redirectEvents();
-        loginas::loginas_student($studentb->id);
+        try {
+            loginas::loginas_student($studentb->id);
+            $this->fail('Expected moodle_exception was not thrown.');
+        } catch (\moodle_exception $e) {
+            $this->assertStringContainsString(
+                get_string('error:alreadyloggedinas', 'local_edtutor'),
+                $e->getMessage()
+            );
+        }
         $events = $sink->get_events();
         $sink->close();
 
+        // The existing login-as session is untouched.
         $this->assertTrue(\core\session\manager::is_loggedinas());
-        $this->assertEquals($studentb->id, $USER->id);
+        $this->assertEquals($studenta->id, $USER->id);
         $this->assertEquals($tutor->id, \core\session\manager::get_realuser()->id);
-        $this->assertEquals(\context_system::instance(), $USER->loginascontext);
 
-        $returned = array_filter($events, function ($event) {
-            return $event instanceof \local_edtutor\event\loginas_returned;
-        });
-        $this->assertCount(1, $returned);
         $loginasevents = array_filter($events, function ($event) {
             return $event instanceof \core\event\user_loggedinas;
         });
-        $this->assertCount(1, $loginasevents);
+        $this->assertCount(0, $loginasevents);
     }
 
     /**
-     * Logging in as the student you are already logged in as is a no-op.
+     * Re-entering login-as for the current student is rejected like any other.
      */
-    public function test_loginas_same_student_is_idempotent(): void {
+    public function test_loginas_same_student_throws(): void {
         global $USER;
         $this->resetAfterTest();
 
@@ -101,47 +108,21 @@ final class loginas_test extends \advanced_testcase {
         loginas::loginas_student($student->id);
 
         $sink = $this->redirectEvents();
-        loginas::loginas_student($student->id);
+        try {
+            loginas::loginas_student($student->id);
+            $this->fail('Expected moodle_exception was not thrown.');
+        } catch (\moodle_exception $e) {
+            $this->assertStringContainsString(
+                get_string('error:alreadyloggedinas', 'local_edtutor'),
+                $e->getMessage()
+            );
+        }
         $events = $sink->get_events();
         $sink->close();
 
         $this->assertCount(0, $events);
         $this->assertEquals($student->id, $USER->id);
         $this->assertEquals($tutor->id, \core\session\manager::get_realuser()->id);
-    }
-
-    /**
-     * Restoring the real user ends the login-as session without logging out.
-     */
-    public function test_restore_real_user(): void {
-        global $USER;
-        $this->resetAfterTest();
-
-        [$tutor, $students] = $this->create_tutor_with_students(1);
-        $student = reset($students);
-
-        $this->setUser($tutor);
-        $sesskey = sesskey();
-        loginas::loginas_student($student->id);
-
-        $sink = $this->redirectEvents();
-        loginas::restore_real_user();
-        $events = $sink->get_events();
-        $sink->close();
-
-        $this->assertFalse(\core\session\manager::is_loggedinas());
-        $this->assertEquals($tutor->id, $USER->id);
-        $this->assertArrayNotHasKey('REALUSER', $_SESSION);
-        $this->assertArrayNotHasKey('REALSESSION', $_SESSION);
-        $this->assertSame($sesskey, sesskey());
-
-        $returned = array_filter($events, function ($event) {
-            return $event instanceof \local_edtutor\event\loginas_returned;
-        });
-        $this->assertCount(1, $returned);
-        $event = reset($returned);
-        $this->assertEquals($tutor->id, $event->userid);
-        $this->assertEquals($student->id, $event->relateduserid);
     }
 
     /**

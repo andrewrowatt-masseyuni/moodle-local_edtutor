@@ -158,15 +158,15 @@ class user_menu {
     /**
      * Add a "Login as ..." link for each of the tutor's allocated students.
      *
-     * Shown on every page. While logged in as a student the entries are
-     * authorised against the tutor's real account, so the tutor can switch
-     * to another student or return to their own account without logging out.
+     * Shown on every page, authorised against the tutor's real account.
+     * While logged in as a student only a "Log out and return to my account"
+     * entry is shown: for security reasons the only way out of a login-as
+     * session is a full logout followed by re-authentication, so switching
+     * directly to another student is not offered.
      *
      * @param \core_user\hook\extend_user_menu $hook The user menu hook.
      */
     private static function add_loginas_items(\core_user\hook\extend_user_menu $hook): void {
-        global $USER;
-
         $realuser = \core\session\manager::get_realuser();
         if (isguestuser($realuser)) {
             return;
@@ -181,9 +181,7 @@ class user_menu {
             return;
         }
 
-        $loggedinas = \core\session\manager::is_loggedinas();
-
-        if ($loggedinas) {
+        if (\core\session\manager::is_loggedinas()) {
             $divider = new \stdClass();
             $divider->itemtype = 'divider';
             $divider->titleidentifier = 'divider,local_edtutor';
@@ -196,25 +194,21 @@ class user_menu {
             $item->titleidentifier = 'returntomyaccount,local_edtutor';
             $item->pix = 'i/return';
             $hook->add_navitem($item);
+            return;
         }
 
         foreach ($students as $student) {
-            $title = get_string(
-                'loginasstudentname',
-                'local_edtutor',
-                fullname($student) . ' (' . $student->username . ')'
-            );
-            if ($loggedinas && $USER->id == $student->id) {
-                $title = get_string('loginasstudentcurrent', 'local_edtutor', $title);
-            }
-
             $item = new \stdClass();
             $item->itemtype = 'link';
             $item->url = new \moodle_url(
                 '/local/edtutor/loginas.php',
                 ['userid' => $student->id, 'sesskey' => sesskey()]
             );
-            $item->title = $title;
+            $item->title = get_string(
+                'loginasstudentname',
+                'local_edtutor',
+                fullname($student) . ' (' . $student->username . ')'
+            );
             $item->titleidentifier = 'loginasstudentname,local_edtutor';
             $item->pix = 'i/user';
             $hook->add_navitem($item);

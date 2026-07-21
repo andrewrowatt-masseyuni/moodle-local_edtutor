@@ -4,9 +4,8 @@
 
 Moodle core already provides login-as, so it is reasonable to ask why this
 plugin ships its own. The short answer is that core's login-as is either **too
-powerful or too narrow** for a tutor's needs, and it **cannot switch between
-users or return to your own account without a full logout**. This plugin is a
-thin least-privilege policy and UX layer on top of core's session machinery: it
+powerful or too narrow** for a tutor's needs. This plugin is a thin
+least-privilege policy and UX layer on top of core's session machinery: it
 still uses `\core\session\manager::loginas()` for the actual session swap and
 only adds the parts core deliberately does not offer.
 
@@ -24,14 +23,6 @@ Core's entry point is `course/loginas.php`, gated entirely on the
   course**, subject to separate-groups restrictions, and reachable only from the
   course participants UI. It cannot see the student's other courses.
 
-Core also **cannot switch or return without a full logout**:
-
-- `\core\session\manager::loginas()` early-returns if you are already
-  logged-in-as, so you cannot hop straight from one user to another.
-- `course/loginas.php` (its opening `is_loggedinas()` guard) forces
-  `require_logout()` and a re-login to get back to yourself —
-  *"for security reasons you need to log out and log in again"*.
-
 ## What this plugin adds
 
 On top of core's session swap, `local_edtutor` adds:
@@ -48,49 +39,49 @@ On top of core's session swap, `local_edtutor` adds:
    system-level `loginascontext` so they can roam *all* of the student's
    courses — but authorised by the allocation, not the dangerous core
    capability.
-3. **Switch students / return to self without logging out.**
-   `restore_real_user()` (`classes/loginas.php`) is the deliberate inverse of
-   core's `loginas()`: it restores the backed-up `REALSESSION`/`REALUSER` in
-   place. `loginas_student()` uses it so a tutor can go student A -> student B
-   -> their own account seamlessly. Core forces a logout/login between each.
-4. **An always-available menu.** The user-menu hook
+3. **An always-available menu.** The user-menu hook
    (`classes/hook_listener/user_menu.php`, `add_loginas_items()`) lists each
-   allocated student plus a "Return to my account" entry on every page, scoped
-   to the tutor. Core's only entry is buried in course participant lists.
-5. **Tighter guards and an audit trail.** `require_can_loginas()` blocks
-   deleted, suspended, guest, site-admin, and self targets, and the return leg
-   fires a custom `loginas_returned` event (core fires `user_loggedinas` on
-   entry but has no return event).
+   allocated student on every page, scoped to the tutor. Core's only entry is
+   buried in course participant lists.
+4. **Tighter guards.** `require_can_loginas()` blocks deleted, suspended,
+   guest, site-admin, and self targets.
 
-## Security trade-off
+## Exiting a login-as session
 
-The "return/switch without logout" behaviour is the one thing core
-**intentionally avoids**. Core forces a logout between sessions so that a
-leftover impersonated session cannot be reused, and so caches are fully cleaned
-(the `sessionforceclean` notice). Restoring the real session in place
-reintroduces exactly that risk.
+The plugin matches core exactly: **the only way out of a login-as session is a
+full logout followed by re-authentication**, mirroring the opening
+`is_loggedinas()` guard of `course/loginas.php` — *"for security reasons you
+need to log out and log in again"*. `loginas.php?userid=0` (the "Log out and
+return to my account" menu entry) calls `require_logout()`, and any hit on
+`loginas.php` while logged-in-as — including a stale login-as link in another
+tab — does the same. `loginas_student()` refuses to run inside an existing
+login-as session.
 
-This is a conscious trade-off for the tutor workflow, where logging out between
-every allocated student would be punishing. Two things keep it safe and must
-stay that way:
+An earlier version of the plugin restored the tutor's backed-up real session in
+place, so tutors could switch students or return to their own account without
+logging out. A security review determined that keeping a restorable privileged
+session alongside the impersonated one is a risk core deliberately avoids: the
+logout guarantees a leftover impersonated session cannot be reused and that
+every sesskey issued to either identity dies with it. The convenience was
+removed in favour of core's model; the deliberate UX regression is that tutors
+re-authenticate between students.
 
-- **The allocation gate is load-bearing.** Because a tutor holds a real
-  login-as capability at system context, the `manager::is_allocated()` check is
-  the only thing standing between them and impersonating arbitrary users. It
-  must remain airtight.
-- **Fallback to a full logout.** If the session backups are missing when
-  `restore_real_user()` runs, it falls back to `require_logout()` rather than
-  leaving the tutor in an ambiguous state.
+Two guards remain load-bearing:
+
+- **The allocation gate.** Because a tutor holds a real login-as capability at
+  system context, the `manager::is_allocated()` check is the only thing
+  standing between them and impersonating arbitrary users. It must remain
+  airtight.
+- **The logout-only exit.** Nothing in the plugin may reintroduce an in-place
+  restore of the real session; core's `user_loggedout` event provides the exit
+  audit trail (core fires `user_loggedinas` on entry).
 
 ## Reuse of core
 
-This plugin is not a reimplementation of login-as. It still performs the actual
-session swap with `\core\session\manager::loginas()`, and `restore_real_user()`
-deliberately mirrors core's session-manipulation contract (the same
-`REALSESSION`/`REALUSER` handling, including the matching phpcs ignores). Only
-two things are bespoke: the **return/switch-without-logout** behaviour that core
-omits, and the **allocation-based policy + UX** layer. If the requirement were
-merely "a teacher logs in as a student within one course", core alone would
-suffice and this plugin would be unnecessary. It earns its place specifically
-through cross-course scope, allocation-based least privilege, and frictionless
-switching.
+This plugin is not a reimplementation of login-as. It performs the actual
+session swap with `\core\session\manager::loginas()` and exits through core's
+`require_logout()`. Only the **allocation-based policy + UX** layer is bespoke.
+If the requirement were merely "a teacher logs in as a student within one
+course", core alone would suffice and this plugin would be unnecessary. It
+earns its place specifically through cross-course scope, allocation-based least
+privilege, and the always-available menu.
