@@ -20,17 +20,15 @@ namespace local_edtutor;
  * Site-level login-as support for education tutors.
  *
  * Lets a tutor log in as an allocated student with a system-level
- * loginascontext (so they can enter any of the student's courses), and
- * switch directly between allocated students by restoring the tutor's
- * real session before starting the next login-as session.
+ * loginascontext, so they can enter any of the student's courses.
  *
  * This exists instead of core's login-as because core is either too powerful
  * (system context impersonates anyone, admin-only) or too narrow (course
- * context is limited to one enrolled course), and core forces a full logout to
- * switch users or return. This class reuses \core\session\manager::loginas()
- * for the session swap and adds only an allocation-gated, least-privilege
- * policy plus the switch/return-without-logout behaviour core omits. See
- * docs/loginas-rationale.md for the full rationale and security trade-off.
+ * context is limited to one enrolled course). This class reuses
+ * \core\session\manager::loginas() for the session swap and adds only an
+ * allocation-gated, least-privilege policy. Exiting the login-as session
+ * works exactly as in core: a full logout followed by re-authentication.
+ * See docs/loginas-rationale.md for the full rationale.
  *
  * @see \core\session\manager::loginas()
  * @package    local_edtutor
@@ -65,69 +63,12 @@ class loginas {
     }
 
     /**
-     * Restore the real user from a login-as session without logging out.
-     *
-     * Mirror image of \core\session\manager::loginas(): puts the backed up
-     * REALSESSION back as the live session and rebuilds the real user.
-     */
-    public static function restore_real_user(): void {
-        global $SESSION;
-
-        if (!\core\session\manager::is_loggedinas()) {
-            return;
-        }
-
-        if (empty($_SESSION['REALSESSION']) || empty($_SESSION['REALUSER'])) {
-            // The backups are gone; the only safe recovery is a full logout.
-            require_logout();
-            redirect(get_login_url());
-        }
-
-        $realuser = $_SESSION['REALUSER'];
-
-        // Match the approach of \core\session\manager.
-        // phpcs:ignore moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
-        $studentid = $GLOBALS['USER']->id;
-
-        // Match the approach of \core\session\manager.
-        // phpcs:ignore moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
-        $GLOBALS['SESSION'] = $_SESSION['REALSESSION'];
-
-        // Match the approach of \core\session\manager.
-        // phpcs:ignore moodle.NamingConventions.ValidVariableName.VariableNameLowerCase
-        $_SESSION['SESSION'] =& $GLOBALS['SESSION'];
-        unset($_SESSION['REALSESSION']);
-        unset($_SESSION['REALUSER']);
-
-        $user = get_complete_user_data('id', $realuser->id);
-        if (!$user) {
-            require_logout();
-            redirect(get_login_url());
-        }
-
-        // Keep the original sesskey so links rendered before the login-as
-        // session (e.g. in other tabs) remain valid.
-        if (isset($realuser->sesskey)) {
-            $user->sesskey = $realuser->sesskey;
-        }
-
-        \core\session\manager::set_user($user);
-
-        // A pre-login-as wantsurl must not hijack the next require_login().
-        unset($SESSION->wantsurl);
-
-        $event = event\loginas_returned::create([
-            'context' => \context_system::instance(),
-            'relateduserid' => $studentid,
-        ]);
-        $event->trigger();
-    }
-
-    /**
      * Log in as an allocated student at site level.
      *
-     * If already logged in as another student, the real user is restored
-     * first so the tutor can switch students without logging out.
+     * Must be called from the tutor's real session. For security reasons the
+     * only way out of an existing login-as session is a full logout followed
+     * by re-authentication, so this refuses to switch or re-enter while one
+     * is active.
      *
      * @param int $studentid The student to log in as.
      * @throws \moodle_exception When the login-as is not permitted.
@@ -135,15 +76,11 @@ class loginas {
     public static function loginas_student(int $studentid): void {
         global $USER;
 
-        $realuser = \core\session\manager::get_realuser();
-        self::require_can_loginas((int)$realuser->id, $studentid);
-
         if (\core\session\manager::is_loggedinas()) {
-            if ((int)$USER->id === $studentid) {
-                return;
-            }
-            self::restore_real_user();
+            throw new \moodle_exception('error:alreadyloggedinas', 'local_edtutor');
         }
+
+        self::require_can_loginas((int)$USER->id, $studentid);
 
         \core\session\manager::loginas($studentid, \context_system::instance());
         \core\notification::info(get_string('sessionforceclean', 'core'));

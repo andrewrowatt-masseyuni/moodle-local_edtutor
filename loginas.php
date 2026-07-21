@@ -15,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Log in as an allocated student at site level, or return to the tutor's own account.
+ * Log in as an allocated student at site level, or log out of a login-as session.
  *
  * Authorisation is based on the tutor-student allocation (plus the
- * local/edtutor:loginas capability), not moodle/user:loginas. Switching
- * between students is supported without logging out.
+ * local/edtutor:loginas capability), not moodle/user:loginas. For security
+ * reasons the only way out of a login-as session is a full logout followed
+ * by re-authentication, exactly as in core.
  *
  * @package    local_edtutor
  * @copyright  2026 Andrew Rowatt <A.J.Rowatt@massey.ac.nz>
@@ -28,20 +29,27 @@
 
 require(__DIR__ . '/../../config.php');
 
-$userid = optional_param('userid', 0, PARAM_INT); // 0 means return to my own account.
-$courseid = optional_param('courseid', 0, PARAM_INT); // Optional course to land in after switching.
+$userid = optional_param('userid', 0, PARAM_INT); // 0 means log out of a login-as session.
+$courseid = optional_param('courseid', 0, PARAM_INT); // Optional course to land in.
 
 $PAGE->set_url(new moodle_url('/local/edtutor/loginas.php', ['userid' => $userid]));
 $PAGE->set_context(context_system::instance());
+
+// For security reasons the only way out of a login-as session is a full
+// logout followed by re-authentication, mirroring course/loginas.php.
+if (\core\session\manager::is_loggedinas()) {
+    require_sesskey();
+    require_logout();
+    // The session is destroyed: no notifications or wantsurl here.
+    // dashboard.php's require_login() sets wantsurl in the new session.
+    redirect(new moodle_url('/local/edtutor/dashboard.php'));
+}
 
 require_login(null, false);
 require_sesskey();
 
 if ($userid === 0) {
-    if (\core\session\manager::is_loggedinas()) {
-        \local_edtutor\loginas::restore_real_user();
-        \core\notification::success(get_string('returnedtomyaccount', 'local_edtutor'));
-    }
+    // Stale link while not in a login-as session: nothing to do.
     redirect(new moodle_url('/local/edtutor/dashboard.php'));
 }
 
